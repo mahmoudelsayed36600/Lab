@@ -67,27 +67,18 @@
         import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         
-        // Your web app's Firebase configuration
+        // إعدادات Firebase الخاصة بتطبيقك
         const firebaseConfig = {
-  apiKey: "AIzaSyAPcPQoAle1eawBZ_rZSjBheG31E5A1nts",
-  authDomain: "bls-lab-97d96.firebaseapp.com",
-  databaseURL: "https://bls-lab-97d96-default-rtdb.firebaseio.com",
-  projectId: "bls-lab-97d96",
-  storageBucket: "bls-lab-97d96.firebasestorage.app",
-  messagingSenderId: "95190305424",
-  appId: "1:95190305424:web:c305cafa6607f3d434a615"
-};
+            apiKey: "AIzaSyAPcPQoAle1eawBZ_rZSjBheG31E5A1nts",
+            authDomain: "bls-lab-97d96.firebaseapp.com",
+            databaseURL: "https://bls-lab-97d96-default-rtdb.firebaseio.com",
+            projectId: "bls-lab-97d96",
+            storageBucket: "bls-lab-97d96.firebasestorage.app",
+            messagingSenderId: "95190305424",
+            appId: "1:95190305424:web:c305cafa6607f3d434a615"
+        };
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        
-        // Setup global variables for app ID
-            }
-        }
-
-        // Initialize Firebase
+        // تهيئة Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
@@ -104,7 +95,7 @@
 
     <!-- React Application Code -->
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
 
         // Mock Icons
         const Icon = ({ name, className }) => {
@@ -173,6 +164,7 @@
 
         const labsInfo = {
             admin: { name: 'إدارة النظام', icon: ShieldCheck, color: 'text-slate-800', bg: 'bg-slate-100' },
+            all: { name: 'جميع المعامل', icon: Database, color: 'text-indigo-600', bg: 'bg-indigo-50' }, // تمت إضافة خيار جميع المعامل
             science_primary: { name: 'معمل العلوم الأولية', icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
             science_upper: { name: 'معمل علوم العليا', icon: Layers, color: 'text-teal-600', bg: 'bg-teal-50' },
             biology: { name: 'معمل الأحياء', icon: Microscope, color: 'text-green-600', bg: 'bg-green-50' },
@@ -188,6 +180,7 @@
         const useFirebaseSync = (collectionName, initialData, authUser) => {
             const [data, setData] = useState(initialData);
             const [loading, setLoading] = useState(true);
+            const isLocalFallback = useRef(false);
 
             useEffect(() => {
                 if (!window.firebaseDB || !authUser) {
@@ -195,11 +188,16 @@
                     return;
                 }
                 
+                if (isLocalFallback.current) {
+                    setLoading(false);
+                    return;
+                }
+
                 const { doc, onSnapshot, setDoc } = window.firebaseModules;
                 
                 // CRITICAL FIX: Use strict public path logic rule
                 const docPath = `artifacts/${window.appId}/public/data/${collectionName}`;
-                const docId = "default_document"; // We store lists as serialized JSON in one doc to avoid complex queries
+                const docId = "default_document"; 
 
                 const docRef = doc(window.firebaseDB, docPath, docId);
 
@@ -209,20 +207,18 @@
                             const parsedData = JSON.parse(docSnap.data().items);
                             setData(parsedData);
                         } catch (e) {
-                            console.error(`Error parsing ${collectionName} data:`, e);
+                            console.warn(`Could not parse ${collectionName} data:`, e);
                             setData(initialData);
                         }
                     } else {
-                        // Document doesn't exist, we will NOT try to create it here to prevent 
-                        // unnecessary permission denied errors on first load if rules restrict it.
-                        // It will be created on the first updateData call.
+                        // Document doesn't exist
                         setData(initialData);
                     }
                     setLoading(false);
                 }, (error) => {
-                    console.error(`Error listening to ${collectionName}:`, error.message);
-                    // Fallback to local state so app still works
+                    console.warn(`Could not sync ${collectionName} with Firebase. Using local state. Reason: ${error.message}`);
                     setData(initialData);
+                    isLocalFallback.current = true;
                     setLoading(false); 
                 });
 
@@ -231,7 +227,7 @@
 
             const updateData = async (newData) => {
                 setData(newData); // Optimistic update
-                if (window.firebaseDB && authUser) {
+                if (window.firebaseDB && authUser && !isLocalFallback.current) {
                     try {
                         const { doc, setDoc } = window.firebaseModules;
                         const docPath = `artifacts/${window.appId}/public/data/${collectionName}`;
@@ -240,7 +236,7 @@
                         
                         await setDoc(docRef, { items: JSON.stringify(newData) });
                     } catch (error) {
-                        console.error(`Error saving ${collectionName}:`, error.message);
+                        console.warn(`Could not save ${collectionName} to Firebase. Data saved locally. Reason: ${error.message}`);
                     }
                 }
             };
@@ -257,7 +253,7 @@
             const [authUser, setAuthUser] = useState(null);
             const [authLoading, setAuthLoading] = useState(true);
 
-            // Handle Firebase Authentication First (RULE 3)
+            // Handle Firebase Authentication First
             useEffect(() => {
                 if (!window.firebaseAuth) {
                     setAuthLoading(false);
@@ -273,7 +269,8 @@
                             await signInAnonymously(window.firebaseAuth);
                         }
                     } catch (error) {
-                        console.error("Firebase Auth Error:", error.message);
+                        // Changed to warn so it doesn't trigger a hard error in the UI.
+                        console.warn("تنبيه: لم يتم تفعيل تسجيل الدخول المجهول (Anonymous Auth) في إعدادات Firebase الخاصة بك. النظام يعمل الآن على الذاكرة المحلية لتفادي توقف العمل.", error.message);
                         setAuthLoading(false);
                     }
                 };
@@ -299,7 +296,7 @@
             const [minutes, setMinutes, minLoading] = useFirebaseSync('minutes', [], authUser);
             const [preparations, setPreparations, prepLoading] = useFirebaseSync('preparations', [], authUser);
             
-            const initialSchedules = Object.keys(labsInfo).filter(k=>k!=='admin').reduce((acc, lab) => {
+            const initialSchedules = Object.keys(labsInfo).filter(k=>k!=='admin' && k!=='all').reduce((acc, lab) => {
                 acc[lab] = days.reduce((dAcc, day) => { dAcc[day] = periods.reduce((pAcc, p) => ({...pAcc, [p]: {class: '', teacher: ''}}), {}); return dAcc; }, {});
                 return acc;
             }, {});
@@ -313,7 +310,7 @@
                 if(appSettings && appSettings.currentYear && !activeYearFilter) {
                     setActiveYearFilter(appSettings.currentYear);
                 }
-            }, [appSettings]);
+            }, [appSettings, activeYearFilter]);
 
             const updateSettingsObj = (newObj) => setAppSettings([newObj]);
             const updateSchedulesObj = (newObj) => setSchedules([newObj]);
@@ -406,7 +403,7 @@
         }
 
         function AdminHub({ user, onSelectLab, onLogout, appSettings }) {
-            const labKeys = Object.keys(labsInfo).filter(k => k !== 'admin');
+            const labKeys = Object.keys(labsInfo).filter(k => k !== 'admin' && k !== 'all');
             return (
                 <div className="min-h-screen bg-slate-50 flex flex-col animate-in">
                     <header className="bg-white border-b p-6 flex justify-between items-center shadow-sm">
@@ -470,7 +467,11 @@
                 adminActiveLab === 'users' ? 'users' : adminActiveLab === 'settings' ? 'settings' : adminActiveLab === 'minutes_global' ? 'minutes' : 'inventory'
             );
             
-            const userInventory = activeRole === 'admin' ? inventory : inventory.filter(item => item.lab === activeRole);
+            // إضافة خاصية اختيار المعمل للمسكنين على "جميع المعامل"
+            const [subLab, setSubLab] = useState('science_primary');
+            const effectiveRole = activeRole === 'all' ? subLab : activeRole;
+            
+            const userInventory = effectiveRole === 'admin' ? inventory : inventory.filter(item => item.lab === effectiveRole);
             const isTeacher = user.type === 'teacher';
 
             const menuItems = [
@@ -492,11 +493,11 @@
                     <aside className="w-full md:w-64 bg-slate-50 border-l border-slate-200 flex flex-col print:hidden shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)] z-10">
                         <div className="p-5 border-b border-slate-200 bg-white">
                             <div className="flex items-center gap-3">
-                                <div className={`p-2.5 rounded-xl ${labsInfo[activeRole]?.bg || labsInfo.admin.bg} ${labsInfo[activeRole]?.color || labsInfo.admin.color}`}>
-                                    {React.createElement(labsInfo[activeRole]?.icon || labsInfo.admin.icon, { className: 'w-6 h-6' })}
+                                <div className={`p-2.5 rounded-xl ${labsInfo[effectiveRole]?.bg || labsInfo.admin.bg} ${labsInfo[effectiveRole]?.color || labsInfo.admin.color}`}>
+                                    {React.createElement(labsInfo[effectiveRole]?.icon || labsInfo.admin.icon, { className: 'w-6 h-6' })}
                                 </div>
                                 <div>
-                                    <h2 className="font-bold text-sm text-slate-800 leading-tight">{labsInfo[activeRole]?.name || 'إدارة النظام'}</h2>
+                                    <h2 className="font-bold text-sm text-slate-800 leading-tight">{labsInfo[effectiveRole]?.name || 'إدارة النظام'}</h2>
                                     <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded mt-1.5 block w-max">{userTypes[user.type]}</span>
                                 </div>
                             </div>
@@ -518,12 +519,22 @@
                     </aside>
                     <main className="flex-1 flex flex-col min-h-screen bg-slate-50/30 relative">
                         {!['users', 'settings'].includes(activeTab) && (
-                            <header className="bg-white border-b border-slate-200 p-4 flex justify-between items-center print:hidden shadow-sm z-0">
-                                <div className="flex items-center gap-3 font-bold text-slate-700">
-                                    <span className="text-sm bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">أرشيف وعرض بيانات العام:</span>
-                                    <select value={activeYearFilter} onChange={e=>setActiveYearFilter(e.target.value)} className="border-2 border-blue-200 p-1.5 rounded-lg bg-blue-50 outline-none text-sm text-blue-800 focus:border-blue-500 transition-colors cursor-pointer">
-                                        {appSettings.years.map(y => <option key={y} value={y}>{y}</option>)}
-                                    </select>
+                            <header className="bg-white border-b border-slate-200 p-4 flex flex-wrap justify-between items-center print:hidden shadow-sm z-0 gap-4">
+                                <div className="flex flex-wrap items-center gap-4">
+                                    <div className="flex items-center gap-3 font-bold text-slate-700">
+                                        <span className="text-sm bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">أرشيف العام:</span>
+                                        <select value={activeYearFilter} onChange={e=>setActiveYearFilter(e.target.value)} className="border-2 border-blue-200 p-1.5 rounded-lg bg-blue-50 outline-none text-sm text-blue-800 focus:border-blue-500 transition-colors cursor-pointer">
+                                            {appSettings.years.map(y => <option key={y} value={y}>{y}</option>)}
+                                        </select>
+                                    </div>
+                                    {activeRole === 'all' && (
+                                        <div className="flex items-center gap-2 font-bold text-indigo-700 border-r-2 border-slate-200 pr-4">
+                                            <span className="text-sm bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200">اختر المعمل:</span>
+                                            <select value={subLab} onChange={e=>setSubLab(e.target.value)} className="border-2 border-indigo-200 p-1.5 rounded-lg bg-indigo-50 outline-none text-sm text-indigo-800 focus:border-indigo-500 transition-colors cursor-pointer">
+                                                {Object.keys(labsInfo).filter(k=>k!=='admin' && k!=='all').map(k => <option key={k} value={k}>{labsInfo[k].name}</option>)}
+                                            </select>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="text-xs font-bold text-slate-500 bg-slate-100 border border-slate-200 px-4 py-2 rounded-xl flex items-center gap-2">
                                     <span>{appSettings.currentSchool}</span>
@@ -537,16 +548,16 @@
                                 {activeTab === 'settings' && <StructureSettingsView appSettings={appSettings} setAppSettings={setAppSettings} />}
                                 {activeTab === 'users' && <UsersManagementView users={users} setUsers={setUsers} appSettings={appSettings} />}
                                 
-                                {activeTab === 'inventory' && <InventoryView inventory={userInventory} user={user} setInventory={setInventory} setMinutes={setMinutes} minutes={minutes} activeRole={activeRole} appSettings={appSettings} setTransactions={setTransactions} transactions={transactions} users={users} />}
-                                {activeTab === 'supply' && <SupplyView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={activeRole} user={user} appSettings={appSettings} />}
-                                {activeTab === 'consumption' && <ConsumptionView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={activeRole} user={user} appSettings={appSettings} users={users} />}
-                                {activeTab === 'expiry' && <ExpiryView inventory={userInventory} setInventory={setInventory} minutes={minutes} setMinutes={setMinutes} transactions={transactions} setTransactions={setTransactions} user={user} activeRole={activeRole} appSettings={appSettings} />}
-                                {activeTab === 'transfer' && <TransferView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={activeRole} user={user} appSettings={appSettings} minutes={minutes} setMinutes={setMinutes} />}
+                                {activeTab === 'inventory' && <InventoryView inventory={userInventory} user={user} setInventory={setInventory} setMinutes={setMinutes} minutes={minutes} activeRole={effectiveRole} appSettings={appSettings} setTransactions={setTransactions} transactions={transactions} users={users} />}
+                                {activeTab === 'supply' && <SupplyView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={effectiveRole} user={user} appSettings={appSettings} />}
+                                {activeTab === 'consumption' && <ConsumptionView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={effectiveRole} user={user} appSettings={appSettings} users={users} />}
+                                {activeTab === 'expiry' && <ExpiryView inventory={userInventory} setInventory={setInventory} minutes={minutes} setMinutes={setMinutes} transactions={transactions} setTransactions={setTransactions} user={user} activeRole={effectiveRole} appSettings={appSettings} />}
+                                {activeTab === 'transfer' && <TransferView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={effectiveRole} user={user} appSettings={appSettings} minutes={minutes} setMinutes={setMinutes} />}
                                 
-                                {activeTab === 'preparation' && <EPreparationView preparations={preparations} setPreparations={setPreparations} inventory={userInventory} user={user} activeRole={activeRole} appSettings={appSettings} activeYearFilter={activeYearFilter} />}
-                                {activeTab === 'schedule' && <ScheduleView activeRole={activeRole} schedules={schedules} setSchedules={setSchedules} users={users} appSettings={appSettings} user={user} />}
-                                {activeTab === 'minutes' && <MinutesView minutes={minutes} activeRole={activeRole} activeYearFilter={activeYearFilter} />}
-                                {activeTab === 'reports' && <ReportsView inventory={userInventory} transactions={transactions} activeRole={activeRole} activeYearFilter={activeYearFilter} />}
+                                {activeTab === 'preparation' && <EPreparationView preparations={preparations} setPreparations={setPreparations} inventory={userInventory} user={user} activeRole={effectiveRole} appSettings={appSettings} activeYearFilter={activeYearFilter} />}
+                                {activeTab === 'schedule' && <ScheduleView activeRole={effectiveRole} schedules={schedules} setSchedules={setSchedules} users={users} appSettings={appSettings} user={user} />}
+                                {activeTab === 'minutes' && <MinutesView minutes={minutes} activeRole={effectiveRole} activeYearFilter={activeYearFilter} />}
+                                {activeTab === 'reports' && <ReportsView inventory={userInventory} transactions={transactions} activeRole={effectiveRole} activeYearFilter={activeYearFilter} />}
                             </div>
                         </div>
                     </main>
@@ -712,7 +723,7 @@
             const [incidentForm, setIncidentForm] = useState(null); 
             const [incidentData, setIncidentData] = useState({ qty: '', date: '', day: days[0], period: periods[0], gradeClass: '', teacher: '', responsible: '' });
 
-            const labTeachers = users.filter(u => u.role === activeRole && ['teacher', 'coordinator', 'supervisor'].includes(u.type));
+            const labTeachers = users.filter(u => (u.role === activeRole || u.role === 'all') && ['teacher', 'coordinator', 'supervisor'].includes(u.type));
             const allClasses = appSettings.grades.flatMap(g => appSettings.classes.map(c => `${g} / ${c}`));
 
             const submitIncident = (e) => {
@@ -852,7 +863,7 @@
         // --- الاستهلاك ---
         function ConsumptionView({ inventory, setInventory, setTransactions, activeRole, user, appSettings, users }) {
             const consumableItems = inventory.filter(i => i.lab === activeRole && i.type === 'consumable' && i.quantity > 0);
-            const labTeachers = users.filter(u => u.role === activeRole && ['teacher', 'coordinator', 'supervisor'].includes(u.type));
+            const labTeachers = users.filter(u => (u.role === activeRole || u.role === 'all') && ['teacher', 'coordinator', 'supervisor'].includes(u.type));
             const allClasses = appSettings.grades.flatMap(g => appSettings.classes.map(c => `${g} / ${c}`));
 
             const [formData, setFormData] = useState({ itemId: '', qty: '', date: '', day: days[0], period: periods[0], gradeClass: '', teacher: '' });
@@ -1060,7 +1071,7 @@
                                 <label className="block text-sm font-bold text-slate-700 mb-2">المعمل الوجهة المستلم</label>
                                 <select required value={targetLab} onChange={e => setTargetLab(e.target.value)} className="w-full p-4 border border-slate-300 rounded-xl outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-purple-400 font-bold text-slate-800">
                                     <option value="">-- اختر الوجهة --</option>
-                                    {Object.keys(labsInfo).filter(k => k !== 'admin' && k !== activeRole).map(key => <option key={key} value={key}>{labsInfo[key].name}</option>)}
+                                    {Object.keys(labsInfo).filter(k => k !== 'admin' && k !== activeRole && k !== 'all').map(key => <option key={key} value={key}>{labsInfo[key].name}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -1284,7 +1295,7 @@
         function ScheduleView({ activeRole, schedules, setSchedules, users, appSettings, user }) {
             const [isEditing, setIsEditing] = useState(false);
             const mySchedule = schedules[activeRole] || schedules['science_primary'];
-            const labTeachers = users.filter(u => u.role === activeRole && ['teacher', 'coordinator', 'supervisor'].includes(u.type));
+            const labTeachers = users.filter(u => (u.role === activeRole || u.role === 'all') && ['teacher', 'coordinator', 'supervisor'].includes(u.type));
             const allClasses = appSettings.grades.flatMap(g => appSettings.classes.map(c => `${g} / ${c}`));
             const canEdit = user.type === 'admin' || user.type === 'supervisor' || user.type === 'coordinator';
 
