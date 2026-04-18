@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة المعامل ERP</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Custom Styles -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        @media print {
+            .print\:hidden { display: none !important; }
+            .print\:block { display: block !important; }
+            .print\:m-0 { margin: 0 !important; }
+            .print\:p-0 { padding: 0 !important; }
+            .print\:border-none { border: none !important; }
+            .print\:shadow-none { box-shadow: none !important; }
+            body { background-color: white !important; }
+        }
+        
+        /* Simple fade-in animation class */
+        .animate-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- Firebase SDK Modules -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+  apiKey: "AIzaSyAPcPQoAle1eawBZ_rZSjBheG31E5A1nts",
+  authDomain: "bls-lab-97d96.firebaseapp.com",
+  databaseURL: "https://bls-lab-97d96-default-rtdb.firebaseio.com",
+  projectId: "bls-lab-97d96",
+  storageBucket: "bls-lab-97d96.firebasestorage.app",
+  messagingSenderId: "95190305424",
+  appId: "1:95190305424:web:c305cafa6607f3d434a615"
+};
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        // Setup global variables for app ID
+            }
+        }
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        // Use injected App ID or fallback
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'bls-lab-v1';
+
+        // Export to global scope for React to use
+        window.firebaseDB = db;
+        window.firebaseAuth = auth;
+        window.firebaseModules = { collection, doc, getDoc, setDoc, onSnapshot, signInAnonymously, onAuthStateChanged, signInWithCustomToken };
+        window.appId = appId;
+    </script>
+
+    <!-- React Application Code -->
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Mock Icons
+        const Icon = ({ name, className }) => {
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            });
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        const FlaskConical = (p) => <Icon name="flask-conical" {...p} />;
+        const Microscope = (p) => <Icon name="microscope" {...p} />;
+        const Atom = (p) => <Icon name="atom" {...p} />;
+        const Activity = (p) => <Icon name="activity" {...p} />;
+        const ShieldCheck = (p) => <Icon name="shield-check" {...p} />;
+        const LogOut = (p) => <Icon name="log-out" {...p} />;
+        const PackagePlus = (p) => <Icon name="package-plus" {...p} />;
+        const Database = (p) => <Icon name="database" {...p} />;
+        const AlertTriangle = (p) => <Icon name="alert-triangle" {...p} />;
+        const ArrowRightLeft = (p) => <Icon name="arrow-right-left" {...p} />;
+        const ClipboardList = (p) => <Icon name="clipboard-list" {...p} />;
+        const CalendarDays = (p) => <Icon name="calendar-days" {...p} />;
+        const Printer = (p) => <Icon name="printer" {...p} />;
+        const Search = (p) => <Icon name="search" {...p} />;
+        const PlusCircle = (p) => <Icon name="plus-circle" {...p} />;
+        const CheckCircle2 = (p) => <Icon name="check-circle-2" {...p} />;
+        const XCircle = (p) => <Icon name="x-circle" {...p} />;
+        const Barcode = (p) => <Icon name="barcode" {...p} />;
+        const Users = (p) => <Icon name="users" {...p} />;
+        const Download = (p) => <Icon name="download" {...p} />;
+        const Upload = (p) => <Icon name="upload" {...p} />;
+        const FileSpreadsheet = (p) => <Icon name="file-spreadsheet" {...p} />;
+        const Eye = (p) => <Icon name="eye" {...p} />;
+        const EyeOff = (p) => <Icon name="eye-off" {...p} />;
+        const Edit = (p) => <Icon name="edit" {...p} />;
+        const Trash2 = (p) => <Icon name="trash-2" {...p} />;
+        const Home = (p) => <Icon name="home" {...p} />;
+        const FileSignature = (p) => <Icon name="file-signature" {...p} />;
+        const Save = (p) => <Icon name="save" {...p} />;
+        const Settings = (p) => <Icon name="settings" {...p} />;
+        const Layers = (p) => <Icon name="layers" {...p} />;
+        const Hammer = (p) => <Icon name="hammer" {...p} />;
+        const FileMinus = (p) => <Icon name="file-minus" {...p} />;
+        const FileText = (p) => <Icon name="file-text" {...p} />;
+        const FileDown = (p) => <Icon name="file-down" {...p} />;
+
+        // ==========================================
+        // 1. الإعدادات والبيانات الافتراضية
+        // ==========================================
+        const initialSettings = {
+            currentSchool: 'مدرسة الرواد الأهلية',
+            currentYear: '1445-1446',
+            currentTerm: 'الفصل الدراسي الأول',
+            years: ['1444-1445', '1445-1446', '1446-1447'],
+            terms: ['الفصل الدراسي الأول', 'الفصل الدراسي الثاني', 'الفصل الدراسي الثالث'],
+            schools: ['مدرسة الرواد الأهلية', 'مجمع النور التعليمي'],
+            stages: ['الابتدائية', 'المتوسطة', 'الثانوية'],
+            grades: ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس'],
+            classes: ['أ', 'ب', 'ج', 'د']
+        };
+
+        const initialUsers = [
+            { id: 'u1', username: 'Mahmoud', password: 'Ma@521990', role: 'admin', type: 'admin', name: 'مدير النظام محمود', stages: [], grades: [], classes: [] },
+        ];
+
+        const labsInfo = {
+            admin: { name: 'إدارة النظام', icon: ShieldCheck, color: 'text-slate-800', bg: 'bg-slate-100' },
+            science_primary: { name: 'معمل العلوم الأولية', icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            science_upper: { name: 'معمل علوم العليا', icon: Layers, color: 'text-teal-600', bg: 'bg-teal-50' },
+            biology: { name: 'معمل الأحياء', icon: Microscope, color: 'text-green-600', bg: 'bg-green-50' },
+            chemistry: { name: 'معمل الكيمياء', icon: FlaskConical, color: 'text-blue-600', bg: 'bg-blue-50' },
+            physics: { name: 'معمل الفيزياء', icon: Atom, color: 'text-purple-600', bg: 'bg-purple-50' },
+        };
+
+        const userTypes = { admin: 'مدير نظام', supervisor: 'مشرف معمل', coordinator: 'منسق مادة', teacher: 'معلم' };
+        const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
+        const periods = ['الحصة 1', 'الحصة 2', 'الحصة 3', 'الحصة 4', 'الحصة 5', 'الحصة 6', 'الحصة 7', 'الحصة 8'];
+
+        // Helper to sync with Firebase
+        const useFirebaseSync = (collectionName, initialData, authUser) => {
+            const [data, setData] = useState(initialData);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                if (!window.firebaseDB || !authUser) {
+                    setLoading(false);
+                    return;
+                }
+                
+                const { doc, onSnapshot, setDoc } = window.firebaseModules;
+                
+                // CRITICAL FIX: Use strict public path logic rule
+                const docPath = `artifacts/${window.appId}/public/data/${collectionName}`;
+                const docId = "default_document"; // We store lists as serialized JSON in one doc to avoid complex queries
+
+                const docRef = doc(window.firebaseDB, docPath, docId);
+
+                const unsubscribe = onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        try {
+                            const parsedData = JSON.parse(docSnap.data().items);
+                            setData(parsedData);
+                        } catch (e) {
+                            console.error(`Error parsing ${collectionName} data:`, e);
+                            setData(initialData);
+                        }
+                    } else {
+                        // Document doesn't exist, we will NOT try to create it here to prevent 
+                        // unnecessary permission denied errors on first load if rules restrict it.
+                        // It will be created on the first updateData call.
+                        setData(initialData);
+                    }
+                    setLoading(false);
+                }, (error) => {
+                    console.error(`Error listening to ${collectionName}:`, error.message);
+                    // Fallback to local state so app still works
+                    setData(initialData);
+                    setLoading(false); 
+                });
+
+                return () => unsubscribe();
+            }, [collectionName, authUser]);
+
+            const updateData = async (newData) => {
+                setData(newData); // Optimistic update
+                if (window.firebaseDB && authUser) {
+                    try {
+                        const { doc, setDoc } = window.firebaseModules;
+                        const docPath = `artifacts/${window.appId}/public/data/${collectionName}`;
+                        const docId = "default_document";
+                        const docRef = doc(window.firebaseDB, docPath, docId);
+                        
+                        await setDoc(docRef, { items: JSON.stringify(newData) });
+                    } catch (error) {
+                        console.error(`Error saving ${collectionName}:`, error.message);
+                    }
+                }
+            };
+
+            return [data, updateData, loading];
+        };
+
+        // ==========================================
+        // 2. التطبيق الرئيسي
+        // ==========================================
+        function App() {
+            const [currentUser, setCurrentUser] = useState(null);
+            const [adminActiveLab, setAdminActiveLab] = useState(null);
+            const [authUser, setAuthUser] = useState(null);
+            const [authLoading, setAuthLoading] = useState(true);
+
+            // Handle Firebase Authentication First (RULE 3)
+            useEffect(() => {
+                if (!window.firebaseAuth) {
+                    setAuthLoading(false);
+                    return;
+                }
+
+                const initAuth = async () => {
+                    try {
+                        const { signInWithCustomToken, signInAnonymously } = window.firebaseModules;
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(window.firebaseAuth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(window.firebaseAuth);
+                        }
+                    } catch (error) {
+                        console.error("Firebase Auth Error:", error.message);
+                        setAuthLoading(false);
+                    }
+                };
+
+                initAuth();
+
+                const { onAuthStateChanged } = window.firebaseModules;
+                const unsubscribe = onAuthStateChanged(window.firebaseAuth, (user) => {
+                    setAuthUser(user);
+                    setAuthLoading(false);
+                });
+
+                return () => unsubscribe();
+            }, []);
+            
+            // Firebase synced states
+            const [appSettingsData, setAppSettings, settingsLoading] = useFirebaseSync('settings', [initialSettings], authUser);
+            const appSettings = appSettingsData[0] || initialSettings;
+            
+            const [inventory, setInventory, invLoading] = useFirebaseSync('inventory', [], authUser);
+            const [transactions, setTransactions, transLoading] = useFirebaseSync('transactions', [], authUser);
+            const [users, setUsers, usersLoading] = useFirebaseSync('users', initialUsers, authUser);
+            const [minutes, setMinutes, minLoading] = useFirebaseSync('minutes', [], authUser);
+            const [preparations, setPreparations, prepLoading] = useFirebaseSync('preparations', [], authUser);
+            
+            const initialSchedules = Object.keys(labsInfo).filter(k=>k!=='admin').reduce((acc, lab) => {
+                acc[lab] = days.reduce((dAcc, day) => { dAcc[day] = periods.reduce((pAcc, p) => ({...pAcc, [p]: {class: '', teacher: ''}}), {}); return dAcc; }, {});
+                return acc;
+            }, {});
+            const [schedulesData, setSchedules, schedLoading] = useFirebaseSync('schedules', [initialSchedules], authUser);
+            const schedules = schedulesData[0] || initialSchedules;
+
+            const [activeYearFilter, setActiveYearFilter] = useState('');
+
+            // Set initial year filter once settings are loaded
+            useEffect(() => {
+                if(appSettings && appSettings.currentYear && !activeYearFilter) {
+                    setActiveYearFilter(appSettings.currentYear);
+                }
+            }, [appSettings]);
+
+            const updateSettingsObj = (newObj) => setAppSettings([newObj]);
+            const updateSchedulesObj = (newObj) => setSchedules([newObj]);
+
+            const isLoading = authLoading || (authUser && settingsLoading);
+
+            if (isLoading) {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
+                        <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                        <div className="text-xl font-bold text-blue-600 animate-pulse">جاري الاتصال وتجهيز النظام...</div>
+                    </div>
+                );
+            }
+
+            if (!currentUser) return <LoginScreen onLogin={setCurrentUser} usersList={users} />;
+
+            if (currentUser.type === 'admin' && !adminActiveLab) {
+                return <AdminHub user={currentUser} onSelectLab={setAdminActiveLab} onLogout={() => setCurrentUser(null)} appSettings={appSettings} />;
+            }
+
+            const activeRole = currentUser.type === 'admin' && adminActiveLab && !['users', 'settings', 'minutes_global'].includes(adminActiveLab) ? adminActiveLab : currentUser.role;
+
+            return (
+                <Dashboard 
+                    user={currentUser} activeRole={activeRole} adminActiveLab={adminActiveLab}
+                    onBackToHub={() => setAdminActiveLab(null)} onLogout={() => setCurrentUser(null)} 
+                    appSettings={appSettings} setAppSettings={updateSettingsObj} 
+                    activeYearFilter={activeYearFilter || appSettings.currentYear} setActiveYearFilter={setActiveYearFilter}
+                    inventory={inventory} setInventory={setInventory}
+                    transactions={transactions} setTransactions={setTransactions}
+                    users={users} setUsers={setUsers}
+                    minutes={minutes} setMinutes={setMinutes}
+                    preparations={preparations} setPreparations={setPreparations}
+                    schedules={schedules} setSchedules={updateSchedulesObj}
+                />
+            );
+        }
+
+        // ==========================================
+        // شاشات الدخول واللوحات
+        // ==========================================
+        function LoginScreen({ onLogin, usersList }) {
+            const [username, setUsername] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+            const [showPwd, setShowPwd] = useState(false);
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                const user = usersList.find(u => u.username === username && u.password === password);
+                if (user) onLogin(user);
+                else setError('بيانات الدخول غير صحيحة، تأكد من اسم المستخدم وكلمة المرور');
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+                    <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-xl p-8 md:p-12 animate-in">
+                        <div className="text-center mb-8">
+                            <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-sm">
+                                <Atom className="w-10 h-10 text-blue-600" />
+                            </div>
+                            <h1 className="text-3xl font-black text-slate-800 mb-2">نظام المعامل ERP</h1>
+                            <p className="text-slate-500 font-medium">تسجيل الدخول الموحد</p>
+                        </div>
+                        
+                        <form onSubmit={handleLogin} className="space-y-6">
+                            {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm text-center font-bold border border-red-100">{error}</div>}
+                            
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">اسم المستخدم</label>
+                                <input type="text" value={username} onChange={e=>setUsername(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all font-mono" dir="ltr" placeholder="Username" />
+                            </div>
+                            
+                            <div className="relative">
+                                <label className="block text-sm font-bold text-slate-700 mb-2">كلمة المرور</label>
+                                <input type={showPwd ? "text" : "password"} value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all pr-12 font-mono" dir="ltr" placeholder="••••••••" />
+                                <button type="button" onClick={()=>setShowPwd(!showPwd)} className="absolute left-4 top-[42px] text-slate-400 hover:text-blue-600 transition-colors">
+                                    {showPwd ? <EyeOff className="w-6 h-6"/> : <Eye className="w-6 h-6"/>}
+                                </button>
+                            </div>
+                            
+                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all">
+                                تسجيل الدخول
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        function AdminHub({ user, onSelectLab, onLogout, appSettings }) {
+            const labKeys = Object.keys(labsInfo).filter(k => k !== 'admin');
+            return (
+                <div className="min-h-screen bg-slate-50 flex flex-col animate-in">
+                    <header className="bg-white border-b p-6 flex justify-between items-center shadow-sm">
+                        <div>
+                            <h1 className="text-2xl font-black text-slate-800">بوابة مدير النظام الإدارية</h1>
+                            <p className="text-slate-500 font-bold mt-1 text-sm flex items-center gap-2">
+                                <span className="bg-slate-100 px-2 py-1 rounded">المدرسة: {appSettings.currentSchool}</span>
+                                <span className="bg-slate-100 px-2 py-1 rounded">العام: {appSettings.currentYear}</span>
+                                <span className="bg-slate-100 px-2 py-1 rounded">{appSettings.currentTerm}</span>
+                            </p>
+                        </div>
+                        <button onClick={onLogout} className="flex items-center gap-2 text-red-600 bg-red-50 hover:bg-red-100 px-5 py-2.5 rounded-xl font-bold transition-colors shadow-sm"><LogOut className="w-5 h-5" /> خروج آمن</button>
+                    </header>
+                    
+                    <main className="flex-1 p-8 max-w-6xl mx-auto w-full space-y-8 animate-in">
+                        <h2 className="text-xl font-bold text-slate-700 flex items-center gap-2"><Activity className="text-blue-500 w-5 h-5"/> التوجه السريع للمعامل</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {labKeys.map(key => {
+                                const IconComp = labsInfo[key].icon;
+                                return (
+                                    <button key={key} onClick={() => onSelectLab(key)} className="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm hover:shadow-lg transition-all flex flex-col items-center gap-4 hover:-translate-y-2 group">
+                                        <div className={`p-5 rounded-2xl ${labsInfo[key].bg} group-hover:scale-110 transition-transform`}><IconComp className={`w-12 h-12 ${labsInfo[key].color}`} /></div>
+                                        <h3 className="font-bold text-slate-800 text-lg">{labsInfo[key].name}</h3>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        
+                        <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm mt-8">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800"><Settings className="w-6 h-6 text-slate-600" /> الإدارة المركزية والتهيئة</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <button onClick={() => onSelectLab('settings')} className="bg-slate-50 border border-slate-200 p-5 rounded-2xl flex items-center gap-4 text-right hover:bg-slate-100 transition-colors group">
+                                    <div className="bg-slate-800 text-white p-3 rounded-xl group-hover:scale-105 transition-transform"><Layers className="w-6 h-6" /></div>
+                                    <div><h4 className="font-bold text-slate-900 text-lg">الهيكلة المدرسية</h4><p className="text-slate-500 text-sm mt-1">المراحل، الصفوف، الأعوام</p></div>
+                                </button>
+                                <button onClick={() => onSelectLab('users')} className="bg-blue-50 border border-blue-100 p-5 rounded-2xl flex items-center gap-4 text-right hover:bg-blue-100 transition-colors group">
+                                    <div className="bg-blue-600 text-white p-3 rounded-xl group-hover:scale-105 transition-transform"><Users className="w-6 h-6" /></div>
+                                    <div><h4 className="font-bold text-blue-900 text-lg">تسكين المستخدمين</h4><p className="text-blue-700 text-sm mt-1">توزيع المعلمين والمشرفين</p></div>
+                                </button>
+                                <button onClick={() => onSelectLab('minutes_global')} className="bg-orange-50 border border-orange-100 p-5 rounded-2xl flex items-center gap-4 text-right hover:bg-orange-100 transition-colors group">
+                                    <div className="bg-orange-600 text-white p-3 rounded-xl group-hover:scale-105 transition-transform"><FileSignature className="w-6 h-6" /></div>
+                                    <div><h4 className="font-bold text-orange-900 text-lg">أرشيف المحاضر</h4><p className="text-orange-700 text-sm mt-1">كسر، إعدام، فقدان</p></div>
+                                </button>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        // ==========================================
+        // 3. لوحة القيادة (Dashboard)
+        // ==========================================
+        function Dashboard({ 
+            user, activeRole, adminActiveLab, onBackToHub, onLogout, 
+            appSettings, setAppSettings, activeYearFilter, setActiveYearFilter, 
+            inventory, setInventory, transactions, setTransactions, 
+            users, setUsers, minutes, setMinutes, preparations, setPreparations, schedules, setSchedules 
+        }) {
+            const [activeTab, setActiveTab] = useState(
+                adminActiveLab === 'users' ? 'users' : adminActiveLab === 'settings' ? 'settings' : adminActiveLab === 'minutes_global' ? 'minutes' : 'inventory'
+            );
+            
+            const userInventory = activeRole === 'admin' ? inventory : inventory.filter(item => item.lab === activeRole);
+            const isTeacher = user.type === 'teacher';
+
+            const menuItems = [
+                { id: 'inventory', name: 'جرد المعمل', icon: Database, show: !['users', 'settings'].includes(adminActiveLab) },
+                { id: 'supply', name: 'التوريد', icon: PackagePlus, show: !isTeacher && !['users', 'settings', 'minutes_global'].includes(adminActiveLab) },
+                { id: 'consumption', name: 'الاستهلاك', icon: Activity, show: !isTeacher && !['users', 'settings', 'minutes_global'].includes(adminActiveLab) },
+                { id: 'expiry', name: 'الصلاحية والإعدام', icon: AlertTriangle, show: !isTeacher && !['users', 'settings', 'minutes_global'].includes(adminActiveLab) },
+                { id: 'transfer', name: 'نقل العهدة', icon: ArrowRightLeft, show: !isTeacher && !['users', 'settings', 'minutes_global'].includes(adminActiveLab) },
+                { id: 'preparation', name: 'التحضير الإلكتروني', icon: ClipboardList, show: !['users', 'settings', 'minutes_global'].includes(adminActiveLab) },
+                { id: 'schedule', name: 'الجدول المدرسي', icon: CalendarDays, show: !['users', 'settings', 'minutes_global'].includes(adminActiveLab) },
+                { id: 'minutes', name: 'المحاضر', icon: FileSignature, show: !isTeacher && !['users', 'settings'].includes(adminActiveLab) },
+                { id: 'reports', name: 'التقارير الشاملة', icon: Printer, show: !isTeacher && !['users', 'settings', 'minutes_global'].includes(adminActiveLab) },
+                { id: 'users', name: 'تسكين المستخدمين', icon: Users, show: adminActiveLab === 'users' },
+                { id: 'settings', name: 'إعدادات الهيكلة', icon: Layers, show: adminActiveLab === 'settings' },
+            ];
+
+            return (
+                <div className="min-h-screen bg-white flex flex-col md:flex-row animate-in">
+                    <aside className="w-full md:w-64 bg-slate-50 border-l border-slate-200 flex flex-col print:hidden shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)] z-10">
+                        <div className="p-5 border-b border-slate-200 bg-white">
+                            <div className="flex items-center gap-3">
+                                <div className={`p-2.5 rounded-xl ${labsInfo[activeRole]?.bg || labsInfo.admin.bg} ${labsInfo[activeRole]?.color || labsInfo.admin.color}`}>
+                                    {React.createElement(labsInfo[activeRole]?.icon || labsInfo.admin.icon, { className: 'w-6 h-6' })}
+                                </div>
+                                <div>
+                                    <h2 className="font-bold text-sm text-slate-800 leading-tight">{labsInfo[activeRole]?.name || 'إدارة النظام'}</h2>
+                                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded mt-1.5 block w-max">{userTypes[user.type]}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <nav className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
+                            {menuItems.filter(i => i.show).map(item => {
+                                const IconComponent = item.icon;
+                                return (
+                                    <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all font-bold text-sm ${activeTab === item.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'}`}>
+                                        <IconComponent className={`w-4 h-4 ${activeTab === item.id ? 'text-blue-200' : 'text-slate-400'}`} /> {item.name}
+                                    </button>
+                                )
+                            })}
+                        </nav>
+                        <div className="p-4 border-t border-slate-200 bg-white space-y-2">
+                            {user.type === 'admin' && <button onClick={onBackToHub} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-colors"><Home className="w-4 h-4" /> العودة للرئيسية</button>}
+                            <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-red-600 bg-red-50 hover:bg-red-100 rounded-xl font-bold transition-colors"><LogOut className="w-4 h-4" /> تسجيل خروج</button>
+                        </div>
+                    </aside>
+                    <main className="flex-1 flex flex-col min-h-screen bg-slate-50/30 relative">
+                        {!['users', 'settings'].includes(activeTab) && (
+                            <header className="bg-white border-b border-slate-200 p-4 flex justify-between items-center print:hidden shadow-sm z-0">
+                                <div className="flex items-center gap-3 font-bold text-slate-700">
+                                    <span className="text-sm bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">أرشيف وعرض بيانات العام:</span>
+                                    <select value={activeYearFilter} onChange={e=>setActiveYearFilter(e.target.value)} className="border-2 border-blue-200 p-1.5 rounded-lg bg-blue-50 outline-none text-sm text-blue-800 focus:border-blue-500 transition-colors cursor-pointer">
+                                        {appSettings.years.map(y => <option key={y} value={y}>{y}</option>)}
+                                    </select>
+                                </div>
+                                <div className="text-xs font-bold text-slate-500 bg-slate-100 border border-slate-200 px-4 py-2 rounded-xl flex items-center gap-2">
+                                    <span>{appSettings.currentSchool}</span>
+                                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
+                                    <span>{appSettings.currentTerm}</span>
+                                </div>
+                            </header>
+                        )}
+                        <div className="flex-1 overflow-y-auto p-6 md:p-8 print:p-0">
+                            <div className="max-w-6xl mx-auto print:max-w-none">
+                                {activeTab === 'settings' && <StructureSettingsView appSettings={appSettings} setAppSettings={setAppSettings} />}
+                                {activeTab === 'users' && <UsersManagementView users={users} setUsers={setUsers} appSettings={appSettings} />}
+                                
+                                {activeTab === 'inventory' && <InventoryView inventory={userInventory} user={user} setInventory={setInventory} setMinutes={setMinutes} minutes={minutes} activeRole={activeRole} appSettings={appSettings} setTransactions={setTransactions} transactions={transactions} users={users} />}
+                                {activeTab === 'supply' && <SupplyView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={activeRole} user={user} appSettings={appSettings} />}
+                                {activeTab === 'consumption' && <ConsumptionView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={activeRole} user={user} appSettings={appSettings} users={users} />}
+                                {activeTab === 'expiry' && <ExpiryView inventory={userInventory} setInventory={setInventory} minutes={minutes} setMinutes={setMinutes} transactions={transactions} setTransactions={setTransactions} user={user} activeRole={activeRole} appSettings={appSettings} />}
+                                {activeTab === 'transfer' && <TransferView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={activeRole} user={user} appSettings={appSettings} minutes={minutes} setMinutes={setMinutes} />}
+                                
+                                {activeTab === 'preparation' && <EPreparationView preparations={preparations} setPreparations={setPreparations} inventory={userInventory} user={user} activeRole={activeRole} appSettings={appSettings} activeYearFilter={activeYearFilter} />}
+                                {activeTab === 'schedule' && <ScheduleView activeRole={activeRole} schedules={schedules} setSchedules={setSchedules} users={users} appSettings={appSettings} user={user} />}
+                                {activeTab === 'minutes' && <MinutesView minutes={minutes} activeRole={activeRole} activeYearFilter={activeYearFilter} />}
+                                {activeTab === 'reports' && <ReportsView inventory={userInventory} transactions={transactions} activeRole={activeRole} activeYearFilter={activeYearFilter} />}
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        // ==========================================
+        // 4. الشاشات والمكونات (Views) - Dynamic & Animated
+        // ==========================================
+
+        const ViewHeader = ({ title, desc }) => (
+            <div className="border-b border-slate-200 pb-4 mb-6 flex justify-between items-end print:hidden">
+                <div>
+                    <h2 className="text-3xl font-black text-slate-800 tracking-tight">{title}</h2>
+                    {desc && <p className="text-slate-500 mt-1 font-medium">{desc}</p>}
+                </div>
+                <button onClick={()=>window.print()} className="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-blue-600 px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 shadow-sm transition-all active:scale-95">
+                    <Printer className="w-4 h-4"/> طباعة
+                </button>
+            </div>
+        );
+
+        // --- إعدادات الهيكلة (Admin Only) ---
+        function StructureSettingsView({ appSettings, setAppSettings }) {
+            const handleDel = (field, idx) => {
+                if(window.confirm('تأكيد الحذف؟')) {
+                    const arr = [...appSettings[field]];
+                    arr.splice(idx, 1);
+                    setAppSettings({...appSettings, [field]: arr});
+                }
+            };
+
+            const handleAddSubmit = (e, field, newVal, setNewVal) => {
+                e.preventDefault();
+                if(newVal.trim() !== '') {
+                    setAppSettings({...appSettings, [field]: [...appSettings[field], newVal.trim()]});
+                    setNewVal('');
+                }
+            };
+
+            const Section = ({ title, field, placeholder }) => {
+                const [newVal, setNewVal] = useState('');
+                return (
+                    <div className="border border-slate-200 rounded-2xl p-5 bg-white shadow-sm flex flex-col h-full hover:shadow-md transition-shadow">
+                        <h3 className="font-bold text-slate-800 mb-4 border-b pb-2">{title}</h3>
+                        <div className="flex flex-wrap gap-2 mb-4 flex-1 content-start">
+                            {appSettings[field].map((item, idx) => (
+                                <div key={idx} className="bg-slate-50 text-sm font-bold px-3 py-1.5 rounded-lg flex items-center gap-2 border border-slate-200 text-slate-700">
+                                    {item} <button onClick={()=>handleDel(field, idx)} className="text-red-400 hover:text-red-600 hover:bg-red-50 p-0.5 rounded transition-colors"><XCircle className="w-4 h-4"/></button>
+                                </div>
+                            ))}
+                            {appSettings[field].length === 0 && <span className="text-xs text-slate-400">لا توجد بيانات مضافة</span>}
+                        </div>
+                        <form onSubmit={(e) => handleAddSubmit(e, field, newVal, setNewVal)} className="flex gap-2 mt-auto pt-4 border-t border-slate-100">
+                            <input type="text" value={newVal} onChange={e=>setNewVal(e.target.value)} placeholder={placeholder} className="flex-1 p-2.5 border border-slate-300 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-2 font-bold text-slate-700 transition-all" />
+                            <button type="submit" className="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-700 flex items-center gap-1 shadow-sm transition-colors"><PlusCircle className="w-4 h-4" /> إضافة</button>
+                        </form>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="animate-in fade-in">
+                    <ViewHeader title="إعدادات الهيكلة المدرسية" desc="إدارة الفصول والأعوام الدراسية لتنعكس تلقائياً في النظام" />
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-3xl border border-blue-100 grid grid-cols-1 md:grid-cols-3 gap-6 shadow-sm mb-8">
+                        <div><label className="block text-sm font-bold text-blue-900 mb-2">المدرسة الافتراضية النشطة</label><select value={appSettings.currentSchool} onChange={e=>setAppSettings({...appSettings, currentSchool: e.target.value})} className="w-full p-3 border border-white rounded-xl outline-none font-bold shadow-sm focus:ring-2 focus:ring-blue-500 cursor-pointer">{appSettings.schools.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
+                        <div><label className="block text-sm font-bold text-blue-900 mb-2">العام الدراسي الافتراضي النشط</label><select value={appSettings.currentYear} onChange={e=>setAppSettings({...appSettings, currentYear: e.target.value})} className="w-full p-3 border border-white rounded-xl outline-none font-bold shadow-sm focus:ring-2 focus:ring-blue-500 cursor-pointer">{appSettings.years.map(y=><option key={y} value={y}>{y}</option>)}</select></div>
+                        <div><label className="block text-sm font-bold text-blue-900 mb-2">الفصل الدراسي النشط</label><select value={appSettings.currentTerm} onChange={e=>setAppSettings({...appSettings, currentTerm: e.target.value})} className="w-full p-3 border border-white rounded-xl outline-none font-bold shadow-sm focus:ring-2 focus:ring-blue-500 cursor-pointer">{appSettings.terms.map(y=><option key={y} value={y}>{y}</option>)}</select></div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <Section title="المدارس التابعة" field="schools" placeholder="اسم المدرسة..." />
+                        <Section title="الأعوام الدراسية" field="years" placeholder="مثال: 1446-1447" />
+                        <Section title="الفصول الدراسية (الترم)" field="terms" placeholder="الفصل الدراسي..." />
+                        <Section title="المراحل الدراسية" field="stages" placeholder="مثال: الثانوية" />
+                        <Section title="الصفوف الدراسية" field="grades" placeholder="مثال: الأول" />
+                        <Section title="الفصول الدراسية (الشعب)" field="classes" placeholder="مثال: أ، 1، A" />
+                    </div>
+                </div>
+            );
+        }
+
+        // --- إدارة وتسكين المستخدمين ---
+        function UsersManagementView({ users, setUsers, appSettings }) {
+            const [formData, setFormData] = useState({ id: null, username: '', password: '', role: 'science_primary', type: 'teacher', name: '', stages: [], grades: [], classes: [] });
+            const [isEditing, setIsEditing] = useState(false);
+
+            const toggleArrayItem = (arr, item) => arr.includes(item) ? arr.filter(i => i !== item) : [...arr, item];
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (isEditing) {
+                    setUsers(users.map(u => u.id === formData.id ? { ...formData } : u));
+                    setIsEditing(false);
+                } else {
+                    if (users.find(u => u.username === formData.username)) return alert("اسم المستخدم موجود مسبقاً!");
+                    setUsers([...users, { id: 'u' + Date.now(), ...formData }]);
+                }
+                setFormData({ id: null, username: '', password: '', role: 'science_primary', type: 'teacher', name: '', stages: [], grades: [], classes: [] });
+            };
+
+            const handleEdit = (u) => { setFormData(u); setIsEditing(true); };
+            const handleDelete = (id) => { if(window.confirm("تأكيد الحذف؟")) setUsers(users.filter(u => u.id !== id)); };
+
+            return (
+                <div className="animate-in fade-in">
+                    <ViewHeader title="إدارة وتسكين المستخدمين" desc="توزيع المعلمين والمشرفين على المعامل والفصول" />
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+                        <div className="xl:col-span-1 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm sticky top-6">
+                            <h3 className="text-xl font-bold mb-4 border-b pb-2">{isEditing ? 'تعديل وتسكين مستخدم' : 'إضافة مستخدم جديد'}</h3>
+                            <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+                                <div><label className="block text-xs font-bold mb-1 text-slate-600">الاسم الكامل</label><input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} className="w-full p-2.5 text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" /></div>
+                                <div className="flex gap-3">
+                                    <div className="flex-1"><label className="block text-xs font-bold mb-1 text-slate-600">المستخدم</label><input required type="text" value={formData.username} onChange={e=>setFormData({...formData, username: e.target.value})} className="w-full p-2.5 text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono" dir="ltr" /></div>
+                                    <div className="flex-1"><label className="block text-xs font-bold mb-1 text-slate-600">المرور</label><input required type="text" value={formData.password} onChange={e=>setFormData({...formData, password: e.target.value})} className="w-full p-2.5 text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono" dir="ltr" /></div>
+                                </div>
+                                <div className="flex gap-3">
+                                    <div className="flex-1"><label className="block text-xs font-bold mb-1 text-slate-600">الرتبة</label><select value={formData.type} onChange={e=>setFormData({...formData, type: e.target.value})} className="w-full p-2.5 text-sm border border-slate-300 rounded-xl bg-white font-bold focus:ring-2 focus:ring-blue-500">{Object.entries(userTypes).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
+                                    {formData.type !== 'admin' && <div className="flex-1"><label className="block text-xs font-bold mb-1 text-slate-600">المعمل</label><select value={formData.role} onChange={e=>setFormData({...formData, role: e.target.value})} className="w-full p-2.5 text-sm border border-slate-300 rounded-xl bg-white font-bold focus:ring-2 focus:ring-blue-500">{Object.keys(labsInfo).filter(k=>k!=='admin').map(k => <option key={k} value={k}>{labsInfo[k].name}</option>)}</select></div>}
+                                </div>
+                                {formData.type !== 'admin' && (
+                                    <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-4 mt-4">
+                                        <h4 className="font-bold text-sm text-blue-800 border-b border-slate-200 pb-2">تسكين الهيكلة (اختيار متعدد)</h4>
+                                        <div><span className="text-xs font-bold text-slate-500 block mb-2">المراحل:</span><div className="flex flex-wrap gap-2">{appSettings.stages.map(s => <button type="button" key={s} onClick={()=>setFormData({...formData, stages: toggleArrayItem(formData.stages, s)})} className={`text-xs px-3 py-1.5 border rounded-lg font-bold transition-colors ${formData.stages?.includes(s) ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-100'}`}>{s}</button>)}</div></div>
+                                        <div><span className="text-xs font-bold text-slate-500 block mb-2">الصفوف:</span><div className="flex flex-wrap gap-2">{appSettings.grades.map(s => <button type="button" key={s} onClick={()=>setFormData({...formData, grades: toggleArrayItem(formData.grades, s)})} className={`text-xs px-3 py-1.5 border rounded-lg font-bold transition-colors ${formData.grades?.includes(s) ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-100'}`}>{s}</button>)}</div></div>
+                                        <div><span className="text-xs font-bold text-slate-500 block mb-2">الفصول:</span><div className="flex flex-wrap gap-2">{appSettings.classes.map(s => <button type="button" key={s} onClick={()=>setFormData({...formData, classes: toggleArrayItem(formData.classes, s)})} className={`text-xs px-3 py-1.5 border rounded-lg font-bold transition-colors ${formData.classes?.includes(s) ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-100'}`}>{s}</button>)}</div></div>
+                                    </div>
+                                )}
+                                <button type="submit" className={`w-full text-white font-bold py-3.5 mt-6 rounded-xl shadow-md transition-all ${isEditing ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700'}`}>{isEditing ? 'تحديث البيانات' : 'حفظ المستخدم الجديد'}</button>
+                                {isEditing && <button type="button" onClick={()=>{setIsEditing(false); setFormData({ id: null, username: '', password: '', role: 'science_primary', type: 'teacher', name: '', stages:[], grades:[], classes:[] })}} className="w-full text-slate-500 font-bold py-2 hover:bg-slate-100 rounded-xl transition-colors">إلغاء التعديل</button>}
+                            </form>
+                        </div>
+                        <div className="xl:col-span-2 bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+                            <table className="w-full text-right text-sm">
+                                <thead className="bg-slate-50 border-b border-slate-200"><tr><th className="p-4 font-bold text-slate-600">الاسم / المستخدم</th><th className="p-4 font-bold text-slate-600">الرتبة / المعمل</th><th className="p-4 font-bold text-slate-600">نطاق التسكين</th><th className="p-4 text-center font-bold text-slate-600">الإجراءات</th></tr></thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {users.map(u => (
+                                        <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                                            <td className="p-4"><div className="font-bold text-slate-800 text-base">{u.name}</div><div className="font-mono text-xs text-slate-400 mt-1" dir="ltr">{u.username} | {u.password}</div></td>
+                                            <td className="p-4"><div className="font-bold text-blue-700 text-sm">{userTypes[u.type]}</div>{u.type !== 'admin' && <div className="text-[10px] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full mt-1.5 inline-block font-bold text-slate-600">{labsInfo[u.role]?.name}</div>}</td>
+                                            <td className="p-4 text-[11px] font-bold text-slate-500 space-y-1">{u.type !== 'admin' ? <><div><span className="text-slate-400">مراحل:</span> {u.stages?.join('، ') || '-'}</div><div><span className="text-slate-400">صفوف:</span> {u.grades?.join('، ') || '-'}</div><div><span className="text-slate-400">فصول:</span> {u.classes?.join('، ') || '-'}</div></> : <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full border border-purple-200">صلاحيات مطلقة</span>}</td>
+                                            <td className="p-4 text-center">
+                                                <div className="flex justify-center gap-2">
+                                                    <button onClick={() => handleEdit(u)} className="text-blue-500 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors" title="تعديل"><Edit className="w-4 h-4"/></button>
+                                                    <button onClick={() => handleDelete(u.id)} disabled={u.type === 'admin'} className="text-red-500 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-red-50" title="حذف"><Trash2 className="w-4 h-4"/></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- الجرد ومحاضر الكسر والفقد المدمجة ---
+        function InventoryView({ inventory, user, setInventory, setMinutes, minutes, activeRole, appSettings, setTransactions, transactions, users }) {
+            const [filter, setFilter] = useState('all');
+            const [search, setSearch] = useState('');
+            
+            const [incidentForm, setIncidentForm] = useState(null); 
+            const [incidentData, setIncidentData] = useState({ qty: '', date: '', day: days[0], period: periods[0], gradeClass: '', teacher: '', responsible: '' });
+
+            const labTeachers = users.filter(u => u.role === activeRole && ['teacher', 'coordinator', 'supervisor'].includes(u.type));
+            const allClasses = appSettings.grades.flatMap(g => appSettings.classes.map(c => `${g} / ${c}`));
+
+            const submitIncident = (e) => {
+                e.preventDefault();
+                const qty = parseFloat(incidentData.qty);
+                if(isNaN(qty) || qty <= 0 || qty > incidentForm.item.quantity) return alert("الكمية المدخلة غير صحيحة أو أكبر من المتاح!");
+                
+                const updated = inventory.map(i => i.id === incidentForm.item.id ? { ...i, quantity: i.quantity - qty } : i);
+                setInventory(updated);
+                
+                const minuteType = incidentForm.type === 'كسر' ? 'محضر كسر' : 'محضر فقد';
+                const txType = incidentForm.type === 'كسر' ? 'breakage' : 'loss';
+                const minuteId = (incidentForm.type === 'كسر' ? 'BRK-' : 'LST-') + Math.floor(1000 + Math.random() * 9000);
+                
+                const reasonText = `التاريخ: ${incidentData.date} | الحصة: ${incidentData.period}\nالفصل: ${incidentData.gradeClass} | المعلم: ${incidentData.teacher}\nالمسؤول: ${incidentData.responsible}`;
+                
+                setMinutes([{ id: minuteId, type: minuteType, item: incidentForm.item.name, code: incidentForm.item.code, quantity: qty, unit: incidentForm.item.unit, date: new Date().toISOString(), lab: activeRole, user: user.name, reason: reasonText, year: appSettings.currentYear }, ...minutes]);
+                setTransactions([{ id: Date.now(), type: txType, item: incidentForm.item.name, quantity: qty, date: new Date().toISOString(), user: incidentData.teacher || user.name, lab: activeRole, year: appSettings.currentYear, details: reasonText }, ...transactions]);
+
+                alert(`تم إنشاء ${minuteType} وخصم الكمية بنجاح.`);
+                setIncidentForm(null);
+                setIncidentData({ qty: '', date: '', day: days[0], period: periods[0], gradeClass: '', teacher: '', responsible: '' });
+            };
+
+            const filtered = inventory.filter(item => {
+                const matchesFilter = filter === 'all' || item.type === filter;
+                const matchesSearch = item.name.includes(search) || item.code.includes(search);
+                return matchesFilter && matchesSearch;
+            });
+
+            return (
+                <div className="animate-in fade-in">
+                    <ViewHeader title="جرد العهدة الفعلي" desc="الأصناف والمواد المتوفرة بالمعمل وإدارة المحاضر" />
+                    
+                    {incidentForm && (
+                        <div className="bg-red-50 border border-red-200 rounded-3xl p-8 shadow-md mb-8 relative animate-in">
+                            <button onClick={()=>setIncidentForm(null)} className="absolute top-5 left-5 text-red-400 hover:text-red-700 bg-white rounded-full p-1 shadow-sm"><XCircle/></button>
+                            <h3 className="text-2xl font-black text-red-800 mb-6 flex items-center gap-3">
+                                <div className="bg-red-100 p-2 rounded-xl">{incidentForm.type === 'كسر' ? <Hammer className="text-red-600"/> : <FileMinus className="text-red-600"/>}</div>
+                                إصدار محضر {incidentForm.type} للصنف: {incidentForm.item.name}
+                            </h3>
+                            <form onSubmit={submitIncident} className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                                <div><label className="block text-sm font-bold mb-2 text-red-900">الكمية (المتاح {incidentForm.item.quantity})</label><input required type="number" min="0.1" step="0.1" value={incidentData.qty} onChange={e=>setIncidentData({...incidentData, qty: e.target.value})} className="w-full p-3 border border-red-200 rounded-xl outline-none focus:ring-2 focus:ring-red-400 bg-white" /></div>
+                                <div><label className="block text-sm font-bold mb-2 text-red-900">التاريخ</label><input required type="date" value={incidentData.date} onChange={e=>setIncidentData({...incidentData, date: e.target.value})} className="w-full p-3 border border-red-200 rounded-xl outline-none focus:ring-2 focus:ring-red-400 bg-white" /></div>
+                                <div><label className="block text-sm font-bold mb-2 text-red-900">اليوم</label><select value={incidentData.day} onChange={e=>setIncidentData({...incidentData, day: e.target.value})} className="w-full p-3 border border-red-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-red-400"><option value="">-</option>{days.map(d=><option key={d}>{d}</option>)}</select></div>
+                                <div><label className="block text-sm font-bold mb-2 text-red-900">الحصة</label><select value={incidentData.period} onChange={e=>setIncidentData({...incidentData, period: e.target.value})} className="w-full p-3 border border-red-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-red-400"><option value="">-</option>{periods.map(p=><option key={p}>{p}</option>)}</select></div>
+                                <div><label className="block text-sm font-bold mb-2 text-red-900">الفصل</label><select value={incidentData.gradeClass} onChange={e=>setIncidentData({...incidentData, gradeClass: e.target.value})} className="w-full p-3 border border-red-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-red-400"><option value="">-</option>{allClasses.map(c=><option key={c}>{c}</option>)}</select></div>
+                                <div><label className="block text-sm font-bold mb-2 text-red-900">المعلم المتواجد</label><select value={incidentData.teacher} onChange={e=>setIncidentData({...incidentData, teacher: e.target.value})} className="w-full p-3 border border-red-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-red-400"><option value="">-</option>{labTeachers.map(t=><option key={t.id}>{t.name}</option>)}</select></div>
+                                <div className="col-span-2"><label className="block text-sm font-bold mb-2 text-red-900">المسؤول عن ال{incidentForm.type} (اسم الطالب/الشخص)</label><input required type="text" value={incidentData.responsible} onChange={e=>setIncidentData({...incidentData, responsible: e.target.value})} className="w-full p-3 border border-red-200 rounded-xl outline-none focus:ring-2 focus:ring-red-400 bg-white" placeholder="اكتب الاسم للتوثيق..." /></div>
+                                <div className="col-span-2 md:col-span-4 mt-2">
+                                    <button type="submit" className="bg-red-600 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg hover:bg-red-700 transition-all active:scale-95 flex items-center justify-center w-full md:w-auto gap-2 text-lg"><CheckCircle2/> تأكيد الاعتماد وإصدار المحضر</button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                        <div className="relative w-full md:w-96">
+                            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                            <input type="text" placeholder="بحث باسم الصنف أو الكود..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-4 pr-12 py-3.5 border border-slate-300 rounded-2xl outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-bold text-sm shadow-sm transition-all" />
+                        </div>
+                        <div className="flex gap-2 bg-slate-100 p-1.5 rounded-xl shadow-inner w-full md:w-auto overflow-x-auto">
+                            <button onClick={() => setFilter('all')} className={`px-5 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${filter === 'all' ? 'bg-white shadow-sm text-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}>عرض الكل</button>
+                            <button onClick={() => setFilter('permanent')} className={`px-5 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${filter === 'permanent' ? 'bg-white shadow-sm text-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}>مواد مستديمة</button>
+                            <button onClick={() => setFilter('consumable')} className={`px-5 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${filter === 'consumable' ? 'bg-white shadow-sm text-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}>مواد مستهلكة</button>
+                        </div>
+                    </div>
+                    
+                    <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+                        <table className="w-full text-right text-sm">
+                            <thead className="bg-slate-50/80 border-b border-slate-200">
+                                <tr>
+                                    <th className="p-5 font-bold text-slate-600">الكود / الباركود</th><th className="p-5 font-bold text-slate-600">اسم الصنف</th><th className="p-5 font-bold text-slate-600">النوع</th><th className="p-5 font-bold text-slate-600">الرصيد الفعلي</th><th className="p-5 text-center font-bold text-slate-600">المحاضر</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {filtered.map(item => (
+                                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
+                                        <td className="p-5"><div className="font-mono font-bold text-slate-700 bg-slate-100 w-max px-2 py-0.5 rounded border border-slate-200">{item.code}</div><div className="text-[10px] text-slate-400 mt-1 flex items-center gap-1"><Barcode className="w-3 h-3"/> {item.barcode}</div></td>
+                                        <td className="p-5 font-bold text-slate-800 text-base">{item.name}</td>
+                                        <td className="p-5"><span className={`px-3 py-1 rounded-full text-xs font-bold border ${item.type === 'permanent' ? 'bg-purple-50 text-purple-700 border-purple-100' : 'bg-orange-50 text-orange-700 border-orange-100'}`}>{item.type === 'permanent' ? 'مستديم' : 'مستهلك'}</span></td>
+                                        <td className="p-5 font-black text-xl text-blue-600">{item.quantity} <span className="text-xs font-bold text-slate-500 ml-1">{item.unit}</span></td>
+                                        <td className="p-5 text-center">
+                                            {item.type === 'permanent' && item.quantity > 0 && user.type !== 'teacher' ? (
+                                                <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={()=>setIncidentForm({ type:'كسر', item })} className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><Hammer className="w-3.5 h-3.5"/> كسر</button>
+                                                    <button onClick={()=>setIncidentForm({ type:'فقد', item })} className="bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><FileMinus className="w-3.5 h-3.5"/> فقد</button>
+                                                </div>
+                                            ) : <span className="text-slate-300 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">-</span>}
+                                        </td>
+                                    </tr>
+                                ))}
+                                {filtered.length === 0 && <tr><td colSpan="5" className="p-12 text-center text-slate-400 font-bold text-lg">لا توجد أصناف مطابقة لعملية البحث</td></tr>}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- التوريد ---
+        function SupplyView({ inventory, setInventory, setTransactions, activeRole, user, appSettings }) {
+            const [formData, setFormData] = useState({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', lab: activeRole });
+            const [msg, setMsg] = useState('');
+            const generateCode = (lab) => `${lab.substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const newCode = generateCode(formData.lab);
+                const newBarcode = Math.floor(1000000 + Math.random() * 9000000).toString();
+                const newItem = { id: Date.now().toString(), code: newCode, barcode: newBarcode, ...formData, quantity: parseFloat(formData.quantity) };
+                setInventory([...inventory, newItem]);
+                setTransactions(prev => [...prev, { id: Date.now(), type: 'supply', item: newItem.name, quantity: newItem.quantity, date: new Date().toISOString(), user: user.name, lab: formData.lab, year: appSettings.currentYear }]);
+                setMsg(`تم التوريد بنجاح. الكود: ${newCode}`);
+                setFormData({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', lab: activeRole });
+                setTimeout(() => setMsg(''), 4000);
+            };
+
+            return (
+                <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in">
+                    <ViewHeader title="إضافة أصناف جديدة (توريد)" desc="إدخال المواد للأرصدة وتوليد الباركود تلقائياً" />
+                    {msg && <div className="bg-green-50 text-green-700 p-4 rounded-xl flex gap-2 font-bold border border-green-200 animate-in fade-in"><CheckCircle2/>{msg}</div>}
+                    <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6">
+                        <div className="grid grid-cols-2 gap-5">
+                            <div className="col-span-2"><label className="block text-sm font-bold text-slate-700 mb-2">اسم الصنف</label><input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>
+                            <div><label className="block text-sm font-bold text-slate-700 mb-2">النوع</label><select value={formData.type} onChange={e=>setFormData({...formData, type: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800"><option value="consumable">مادة مستهلكة</option><option value="permanent">مادة مستديمة (عهدة)</option></select></div>
+                            <div><label className="block text-sm font-bold text-slate-700 mb-2">الكمية</label><input required type="number" min="0.1" step="0.1" value={formData.quantity} onChange={e=>setFormData({...formData, quantity: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>
+                            <div><label className="block text-sm font-bold text-slate-700 mb-2">الوحدة القياسية</label><input required type="text" value={formData.unit} onChange={e=>setFormData({...formData, unit: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" placeholder="لتر، جهاز، حبة..."/></div>
+                            {formData.type === 'consumable' && <div><label className="block text-sm font-bold text-slate-700 mb-2">تاريخ الصلاحية</label><input required type="date" value={formData.expiryDate} onChange={e=>setFormData({...formData, expiryDate: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>}
+                        </div>
+                        <button type="submit" className="w-full bg-blue-600 text-white font-bold py-4 mt-4 rounded-xl shadow-lg hover:shadow-blue-500/30 hover:bg-blue-700 transition-all text-lg flex items-center justify-center gap-2"><PackagePlus className="w-6 h-6"/> تسجيل الصنف في العهدة</button>
+                    </form>
+                </div>
+            );
+        }
+
+        // --- الاستهلاك ---
+        function ConsumptionView({ inventory, setInventory, setTransactions, activeRole, user, appSettings, users }) {
+            const consumableItems = inventory.filter(i => i.lab === activeRole && i.type === 'consumable' && i.quantity > 0);
+            const labTeachers = users.filter(u => u.role === activeRole && ['teacher', 'coordinator', 'supervisor'].includes(u.type));
+            const allClasses = appSettings.grades.flatMap(g => appSettings.classes.map(c => `${g} / ${c}`));
+
+            const [formData, setFormData] = useState({ itemId: '', qty: '', date: '', day: days[0], period: periods[0], gradeClass: '', teacher: '' });
+            const [msg, setMsg] = useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const itemIndex = inventory.findIndex(i => i.id === formData.itemId);
+                const item = inventory[itemIndex];
+                const consumeQty = parseFloat(formData.qty);
+                if (consumeQty > item.quantity) return alert('الكمية المطلوبة أكبر من الرصيد المتاح!');
+                
+                const updated = [...inventory];
+                updated[itemIndex].quantity -= consumeQty;
+                setInventory(updated);
+                
+                const detailsStr = `الحصة: ${formData.period} | الفصل: ${formData.gradeClass} | المعلم: ${formData.teacher}`;
+                
+                setTransactions(prev => [...prev, { 
+                    id: Date.now(), type: 'consumption', item: item.name, quantity: consumeQty, 
+                    date: formData.date || new Date().toISOString().split('T')[0], 
+                    user: formData.teacher || user.name, lab: activeRole, year: appSettings.currentYear,
+                    details: detailsStr
+                }]);
+                
+                setMsg('تم خصم الاستهلاك وتوثيقه في السجل بنجاح.');
+                setFormData({ itemId: '', qty: '', date: '', day: days[0], period: periods[0], gradeClass: '', teacher: '' });
+                setTimeout(() => setMsg(''), 4000);
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in">
+                    <ViewHeader title="إثبات وتسجيل الاستهلاك" desc="خصم المواد المستهلكة أثناء التجارب وربطها بالمعلم والفصل" />
+                    {msg && <div className="bg-green-50 text-green-700 p-4 rounded-xl border border-green-200 font-bold flex items-center gap-2 animate-in fade-in"><CheckCircle2 className="w-5 h-5"/>{msg}</div>}
+                    
+                    <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6">
+                        <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5 grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                            <div className="md:col-span-2"><label className="block text-sm font-bold mb-2 text-orange-900">الصنف المستهلك</label><select required value={formData.itemId} onChange={e=>setFormData({...formData, itemId: e.target.value})} className="w-full p-3.5 border border-orange-200 rounded-xl outline-none bg-white font-bold text-slate-800 focus:ring-2 focus:ring-orange-400"><option value="">-- اختر من قائمة المواد المتاحة --</option>{consumableItems.map(i => <option key={i.id} value={i.id}>{i.name} (متوفر: {i.quantity} {i.unit})</option>)}</select></div>
+                            <div><label className="block text-sm font-bold mb-2 text-orange-900">الكمية المسحوبة</label><input required type="number" min="0.1" step="0.1" value={formData.qty} onChange={e=>setFormData({...formData, qty: e.target.value})} className="w-full p-3.5 border border-orange-200 rounded-xl outline-none bg-white font-bold text-slate-800 focus:ring-2 focus:ring-orange-400" placeholder="0.0" /></div>
+                        </div>
+
+                        <h4 className="font-bold text-slate-800 mb-4 border-b pb-2 flex items-center gap-2"><ClipboardList className="w-5 h-5 text-blue-500"/> تفاصيل حصة الاستهلاك (للتوثيق)</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+                            <div><label className="block text-sm font-bold mb-2 text-slate-700">التاريخ</label><input required type="date" value={formData.date} onChange={e=>setFormData({...formData, date: e.target.value})} className="w-full p-3 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" /></div>
+                            <div><label className="block text-sm font-bold mb-2 text-slate-700">اليوم</label><select value={formData.day} onChange={e=>setFormData({...formData, day: e.target.value})} className="w-full p-3 border border-slate-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500"><option value="">-</option>{days.map(d=><option key={d}>{d}</option>)}</select></div>
+                            <div><label className="block text-sm font-bold mb-2 text-slate-700">الحصة</label><select value={formData.period} onChange={e=>setFormData({...formData, period: e.target.value})} className="w-full p-3 border border-slate-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500"><option value="">-</option>{periods.map(p=><option key={p}>{p}</option>)}</select></div>
+                            <div><label className="block text-sm font-bold mb-2 text-slate-700">الفصل</label><select required value={formData.gradeClass} onChange={e=>setFormData({...formData, gradeClass: e.target.value})} className="w-full p-3 border border-slate-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500"><option value="">-</option>{allClasses.map(c=><option key={c}>{c}</option>)}</select></div>
+                            <div className="col-span-2"><label className="block text-sm font-bold mb-2 text-slate-700">المعلم المسؤول</label><select required value={formData.teacher} onChange={e=>setFormData({...formData, teacher: e.target.value})} className="w-full p-3 border border-slate-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500"><option value="">-</option>{labTeachers.map(t=><option key={t.id}>{t.name}</option>)}</select></div>
+                        </div>
+                        <button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 mt-6 rounded-xl shadow-lg transition-all text-lg flex justify-center items-center gap-2"><Activity className="w-6 h-6"/> تأكيد الاعتماد وخصم الكمية</button>
+                    </form>
+                </div>
+            );
+        }
+
+        // --- الصلاحية والإعدام المدمج ---
+        function ExpiryView({ inventory, setInventory, minutes, setMinutes, transactions, setTransactions, user, activeRole, appSettings }) {
+            const consumableItems = inventory.filter(i => i.lab === activeRole && i.type === 'consumable' && i.expiryDate);
+            const today = new Date();
+            
+            const [disposeForm, setDisposeForm] = useState(null); 
+            const [committee, setCommittee] = useState('');
+
+            const submitDisposal = (e) => {
+                e.preventDefault();
+                if(!committee.trim()) return alert("يجب كتابة أسماء اللجنة!");
+                
+                // الخصم كاستهلاك (تصفير الكمية)
+                const updated = inventory.map(i => i.id === disposeForm.item.id ? { ...i, quantity: 0 } : i);
+                setInventory(updated);
+                
+                const minuteId = 'DISP-' + Math.floor(1000 + Math.random() * 9000);
+                setMinutes([{ 
+                    id: minuteId, type: 'محضر إعدام مواد', item: disposeForm.item.name, code: disposeForm.item.code, quantity: disposeForm.item.quantity, unit: disposeForm.item.unit, 
+                    date: new Date().toISOString(), lab: activeRole, user: user.name, reason: 'انتهاء الصلاحية وتلف المادة', committee: committee, year: appSettings.currentYear 
+                }, ...minutes]);
+                
+                // تسجيله كـ إعدام في الـ transactions
+                setTransactions([{ id: Date.now(), type: 'disposal', item: disposeForm.item.name, quantity: disposeForm.item.quantity, date: new Date().toISOString(), user: user.name, lab: activeRole, year: appSettings.currentYear, details: `لجنة: ${committee}` }, ...transactions]);
+                
+                alert('تم إعدام المادة وتصفيرها وإنشاء المحضر بنجاح.');
+                setDisposeForm(null); setCommittee('');
+            };
+
+            // فلترة: عرض المنتهي (أقل من 0) وقارب على الانتهاء (أقل من 60 يوم)
+            const displayItems = [...consumableItems]
+                .map(item => {
+                    const diffDays = Math.ceil((new Date(item.expiryDate) - today) / (1000 * 60 * 60 * 24));
+                    return { ...item, diffDays };
+                })
+                .filter(item => item.diffDays <= 60 && item.quantity > 0) // فقط المنتهي أو قارب، ولا يزال له رصيد
+                .sort((a, b) => a.diffDays - b.diffDays);
+
+            return (
+                <div className="space-y-6 animate-in fade-in">
+                    <ViewHeader title="إدارة الصلاحية وتوالف المواد" desc="تتبع المواد التي شارفت على الانتهاء وإصدار محاضر الإعدام للمنتهي" />
+                    
+                    {disposeForm && (
+                        <div className="bg-red-50 border border-red-200 rounded-3xl p-8 shadow-md mb-8 relative animate-in">
+                            <button onClick={()=>setDisposeForm(null)} className="absolute top-5 left-5 text-red-400 hover:text-red-700 bg-white rounded-full p-1"><XCircle/></button>
+                            <h3 className="text-2xl font-black text-red-800 mb-2 flex items-center gap-2"><AlertTriangle className="w-8 h-8"/> إصدار محضر إعدام: {disposeForm.item.name}</h3>
+                            <p className="text-sm font-bold text-red-700 mb-6 bg-red-100/50 p-3 rounded-lg border border-red-200 inline-block">الرصيد الفعلي الذي سيتم إعدامه: {disposeForm.item.quantity} {disposeForm.item.unit}</p>
+                            <form onSubmit={submitDisposal}>
+                                <label className="block text-sm font-bold mb-3 text-red-900">أسماء ووظائف أعضاء لجنة الإعدام (افصل بينهم بفاصلة):</label>
+                                <textarea required rows="3" value={committee} onChange={e=>setCommittee(e.target.value)} placeholder="مثال: أ. أحمد (مشرف المعمل)، أ. محمد (مدير المدرسة)، أ. فهد (معلم علوم)..." className="w-full p-4 border border-red-200 rounded-xl outline-none text-sm focus:ring-2 focus:ring-red-400 bg-white font-bold leading-relaxed"></textarea>
+                                <button type="submit" className="mt-6 w-full md:w-auto bg-red-600 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 text-lg"><Trash2/> اعتماد المحضر وخصم الكمية</button>
+                            </form>
+                        </div>
+                    )}
+
+                    <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+                        <table className="w-full text-right text-sm">
+                            <thead className="bg-slate-50 border-b border-slate-200">
+                                <tr><th className="p-5 font-bold text-slate-600">الصنف</th><th className="p-5 font-bold text-slate-600">تاريخ الانتهاء</th><th className="p-5 font-bold text-slate-600">الرصيد</th><th className="p-5 font-bold text-slate-600">حالة الصلاحية</th><th className="p-5 text-center font-bold text-slate-600">الإجراء (للمنتهي)</th></tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {displayItems.map(item => {
+                                    const isExpired = item.diffDays < 0;
+                                    const statusLabel = isExpired ? 'منتهية الصلاحية' : `متبقي ${item.diffDays} يوم`;
+                                    const color = isExpired ? 'text-red-700 bg-red-100 border-red-200' : 'text-orange-700 bg-orange-100 border-orange-200';
+                                    
+                                    return (
+                                        <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
+                                            <td className="p-5 font-bold text-slate-800 text-base">{item.name} <div className="text-xs font-mono text-slate-400 mt-1">{item.code}</div></td>
+                                            <td className="p-5 font-mono font-bold text-slate-600" dir="ltr">{item.expiryDate}</td>
+                                            <td className="p-5 font-black text-lg text-slate-700">{item.quantity} <span className="text-xs font-normal text-slate-500">{item.unit}</span></td>
+                                            <td className="p-5"><span className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${color}`}>{statusLabel}</span></td>
+                                            <td className="p-5 text-center">
+                                                {isExpired ? (
+                                                    <button onClick={() => setDisposeForm({item})} className="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-600 hover:text-white transition-all flex items-center gap-2 mx-auto shadow-sm group-hover:shadow-md">
+                                                        <Trash2 className="w-4 h-4" /> إعدام وتصفير
+                                                    </button>
+                                                ) : <span className="text-slate-300 text-xs font-bold">لا يزال صالحاً</span>}
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                                {displayItems.length === 0 && <tr><td colSpan="5" className="p-12 text-center text-green-600 font-bold text-lg bg-green-50/30">جميع المواد في العهدة صالحة للاستخدام. لا توجد مواد منتهية أو قاربت على الانتهاء.</td></tr>}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- نقل العهدة ---
+        function TransferView({ inventory, setInventory, transactions, setTransactions, activeRole, user, appSettings, minutes, setMinutes }) {
+            const [selectedItemId, setSelectedItemId] = useState('');
+            const [targetLab, setTargetLab] = useState('');
+            const [qty, setQty] = useState('');
+            const [msg, setMsg] = useState({ type: '', text: '' });
+
+            const availableItems = inventory.filter(i => i.lab === activeRole && i.quantity > 0);
+
+            const handleTransfer = (e) => {
+                e.preventDefault();
+                const itemIndex = inventory.findIndex(i => i.id === selectedItemId);
+                const sourceItem = inventory[itemIndex];
+                const transferQty = parseFloat(qty);
+
+                if (transferQty > sourceItem.quantity) return setMsg({ type: 'error', text: 'الكمية المطلوبة أكبر من المتوفرة بالمعمل!' });
+                if (sourceItem.lab === targetLab) return setMsg({ type: 'error', text: 'اختر معملاً مختلفاً كوجهة للنقل!' });
+
+                let updatedInventory = [...inventory];
+                updatedInventory[itemIndex].quantity -= transferQty;
+
+                const existingTargetItemIndex = updatedInventory.findIndex(i => i.code === sourceItem.code && i.lab === targetLab);
+                if (existingTargetItemIndex > -1) updatedInventory[existingTargetItemIndex].quantity += transferQty;
+                else updatedInventory.push({ ...sourceItem, id: Date.now().toString(), lab: targetLab, quantity: transferQty });
+
+                setInventory(updatedInventory);
+                setTransactions(prev => [...prev, { id: Date.now(), type: 'transfer_out', item: sourceItem.name, quantity: transferQty, date: new Date().toISOString(), user: user.name, lab: activeRole, targetLab: targetLab, year: appSettings.currentYear }]);
+
+                const minuteId = 'TRN-' + Math.floor(1000 + Math.random() * 9000);
+                setMinutes([{ id: minuteId, type: 'محضر نقل عهدة', item: sourceItem.name, code: sourceItem.code, quantity: transferQty, unit: sourceItem.unit, date: new Date().toISOString(), lab: activeRole, user: user.name, reason: `تم النقل إلى: ${labsInfo[targetLab]?.name}`, year: appSettings.currentYear }, ...minutes]);
+
+                setMsg({ type: 'success', text: `تم النقل إلى ${labsInfo[targetLab].name} وإنشاء محضر النقل آلياً.` });
+                setSelectedItemId(''); setTargetLab(''); setQty('');
+                setTimeout(() => setMsg({ type: '', text: '' }), 5000);
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in">
+                    <ViewHeader title="نقل العهدة بين المعامل" desc="تحويل الأجهزة والأدوات بين المعامل وإصدار محاضر النقل آلياً" />
+                    {msg.text && <div className={`p-4 rounded-xl flex items-center gap-3 font-bold border animate-in fade-in ${msg.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>{msg.type === 'error' ? <XCircle/> : <CheckCircle2/>} {msg.text}</div>}
+                    
+                    <form onSubmit={handleTransfer} className="bg-white border border-slate-200 rounded-3xl p-8 space-y-8 shadow-sm">
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">اختر الصنف المراد نقله من العهدة</label>
+                            <select required value={selectedItemId} onChange={e => setSelectedItemId(e.target.value)} className="w-full p-4 border border-slate-300 rounded-xl outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-purple-400 font-bold text-slate-800">
+                                <option value="">-- القائمة --</option>
+                                {availableItems.map(item => <option key={item.id} value={item.id}>{item.name} (المتاح: {item.quantity} {item.unit})</option>)}
+                            </select>
+                        </div>
+                        
+                        <div className="flex flex-col md:flex-row items-center gap-6">
+                            <div className="w-full md:w-1/2">
+                                <label className="block text-sm font-bold text-slate-700 mb-2">الكمية المنقولة</label>
+                                <input required type="number" min="0.1" step="0.1" value={qty} onChange={e => setQty(e.target.value)} className="w-full p-4 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-purple-400 font-black text-xl text-center text-purple-700 bg-slate-50 focus:bg-white" placeholder="0" />
+                            </div>
+                            <div className="hidden md:flex justify-center mt-6 p-4 bg-purple-50 rounded-full text-purple-400">
+                                <ArrowRightLeft className="w-8 h-8" />
+                            </div>
+                            <div className="w-full md:w-1/2">
+                                <label className="block text-sm font-bold text-slate-700 mb-2">المعمل الوجهة المستلم</label>
+                                <select required value={targetLab} onChange={e => setTargetLab(e.target.value)} className="w-full p-4 border border-slate-300 rounded-xl outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-purple-400 font-bold text-slate-800">
+                                    <option value="">-- اختر الوجهة --</option>
+                                    {Object.keys(labsInfo).filter(k => k !== 'admin' && k !== activeRole).map(key => <option key={key} value={key}>{labsInfo[key].name}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-xl flex justify-center items-center gap-3 shadow-lg transition-all active:scale-95 text-lg mt-4">
+                            <ArrowRightLeft className="w-6 h-6" /> تأكيد العملية وإصدار محضر النقل
+                        </button>
+                    </form>
+                </div>
+            );
+        }
+
+        // --- التحضير الإلكتروني المطور ---
+        function EPreparationView({ preparations, setPreparations, inventory, user, activeRole, appSettings, activeYearFilter }) {
+            const [viewMode, setViewMode] = useState('new'); 
+            const [selectedPrepId, setSelectedPrepId] = useState('');
+            
+            const [prepData, setPrepData] = useState({ date: '', day: days[0], period: periods[0], gradeClass: '', topic: '', materials: [], otherMaterials: '' });
+            const [selectedMatId, setSelectedMatId] = useState('');
+            const [selectedMatQty, setSelectedMatQty] = useState('');
+
+            const filteredPreps = preparations.filter(p => p.lab === activeRole && p.year === activeYearFilter);
+
+            const handleAddMaterial = () => {
+                if(!selectedMatId || !selectedMatQty) return;
+                const item = inventory.find(i=>i.id === selectedMatId);
+                setPrepData({...prepData, materials: [...prepData.materials, { id: item.id, name: item.name, qty: selectedMatQty, unit: item.unit }]});
+                setSelectedMatId(''); setSelectedMatQty('');
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const newPrep = {
+                    id: 'PREP-' + Date.now().toString().slice(-6),
+                    createdDate: new Date().toLocaleDateString('ar-SA'),
+                    teacherName: user.name, lab: activeRole, year: appSettings.currentYear, ...prepData
+                };
+                setPreparations([newPrep, ...preparations]);
+                alert("تم حفظ الإذن الإلكتروني بنجاح في السجل.");
+                setPrepData({ date: '', day: days[0], period: periods[0], gradeClass: '', topic: '', materials: [], otherMaterials: '' });
+                setViewMode('view_prev');
+                setSelectedPrepId(newPrep.id);
+            };
+
+            const printDocument = (mode, prepObj = null) => {
+                let content = '';
+                if(mode === 'manual') {
+                    content = `
+                        <div dir="rtl" style="font-family: Arial; padding: 40px; border: 2px solid #000; max-width: 800px; margin: auto; height: 90vh;">
+                            <h1 style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px;">نموذج إذن تحضير (يدوي)</h1>
+                            <div style="margin-top: 30px; font-size: 18px; font-weight: bold; line-height: 2.5;">
+                                <p>اليوم: ..................... الموافق: ..................... الحصة: .....................</p>
+                                <p>الصف والفصل: .....................................................</p>
+                                <p>المعلم: .....................................................</p>
+                                <p>موضوع التجربة: .....................................................</p>
+                                <p>المواد والأدوات المطلوبة:</p>
+                                <div style="border: 2px dashed #666; height: 300px; border-radius: 10px;"></div>
+                                <div style="margin-top: 80px; display: flex; justify-content: space-between; text-align: center;">
+                                    <div>توقيع المعلم<br><br>......................</div>
+                                    <div>توقيع المشرف<br><br>......................</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if(mode === 'electronic' && prepObj) {
+                    content = `
+                        <div dir="rtl" style="font-family: Arial; padding: 40px; border: 2px solid #000; max-width: 800px; margin: auto;">
+                            <h1 style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px;">إذن تحضير إلكتروني معتمد</h1>
+                            <div style="margin-top: 20px; font-size: 16px; font-weight: bold; line-height: 2;">
+                                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                                    <tr><td style="border: 1px solid #000; padding: 10px;">التاريخ: ${prepObj.date}</td><td style="border: 1px solid #000; padding: 10px;">اليوم: ${prepObj.day}</td></tr>
+                                    <tr><td style="border: 1px solid #000; padding: 10px;">الحصة: ${prepObj.period}</td><td style="border: 1px solid #000; padding: 10px;">الفصل: ${prepObj.gradeClass}</td></tr>
+                                    <tr><td style="border: 1px solid #000; padding: 10px;" colspan="2">المعلم: ${prepObj.teacherName}</td></tr>
+                                    <tr><td style="border: 1px solid #000; padding: 10px;" colspan="2">الموضوع: ${prepObj.topic}</td></tr>
+                                </table>
+                                <h3>الأدوات المسحوبة من العهدة:</h3>
+                                <ul style="border: 1px solid #000; padding: 20px 40px; min-height: 100px;">
+                                    ${prepObj.materials.map(m => `<li>${m.name} - الكمية: ${m.qty} ${m.unit}</li>`).join('')}
+                                </ul>
+                                <h3>مواد أخرى:</h3>
+                                <p style="border: 1px solid #000; padding: 20px; min-height: 60px;">${prepObj.otherMaterials || 'لا يوجد'}</p>
+                            </div>
+                            <div style="margin-top: 80px; display: flex; justify-content: space-between; text-align: center; font-weight: bold;">
+                                <div>توقيع المعلم<br><br>......................</div>
+                                <div>اعتماد المشرف<br><br>......................</div>
+                            </div>
+                            <p style="text-align:center; font-size:12px; margin-top:30px; color:#555;">رقم المرجع: ${prepObj.id} | أُنشئ في: ${prepObj.createdDate}</p>
+                        </div>
+                    `;
+                }
+                const win = window.open('', '', 'width=900,height=600');
+                win.document.write(`<html><head><title>طباعة إذن</title></head><body onload="window.print(); window.close();">${content}</body></html>`);
+                win.document.close();
+            };
+
+            const selectedPrepData = filteredPreps.find(p => p.id === selectedPrepId);
+
+            return (
+                <div className="space-y-6 animate-in fade-in">
+                    <ViewHeader title="نظام التحضير الإلكتروني" desc="إنشاء وتوثيق أذونات تجهيز المعمل وإصدار النماذج" />
+                    
+                    {/* القائمة العلوية للخيارات */}
+                    <div className="flex bg-slate-100 p-1.5 rounded-2xl gap-2 print:hidden w-fit shadow-inner">
+                        <button onClick={()=>setViewMode('new')} className={`px-5 py-2.5 text-sm font-bold rounded-xl flex items-center gap-2 transition-all ${viewMode==='new'?'bg-white shadow text-blue-700':'text-slate-600 hover:bg-slate-200'}`}><PlusCircle className="w-4 h-4"/> إذن إلكتروني جديد</button>
+                        <button onClick={()=>setViewMode('view_prev')} className={`px-5 py-2.5 text-sm font-bold rounded-xl flex items-center gap-2 transition-all ${viewMode==='view_prev'?'bg-white shadow text-blue-700':'text-slate-600 hover:bg-slate-200'}`}><FileDown className="w-4 h-4"/> معاينة الأذونات السابقة</button>
+                        <div className="w-px bg-slate-300 mx-1 my-2"></div>
+                        <button onClick={()=>setViewMode('manual')} className={`px-5 py-2.5 text-sm font-bold rounded-xl flex items-center gap-2 transition-all ${viewMode==='manual'?'bg-white shadow text-slate-800':'text-slate-600 hover:bg-slate-200'}`}><FileText className="w-4 h-4"/> طباعة إذن تفريغ يدوي</button>
+                    </div>
+
+                    {viewMode === 'new' && (
+                        <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-8 animate-in fade-in">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                                <div><label className="block text-sm font-bold mb-2 text-slate-700">التاريخ</label><input required type="date" value={prepData.date} onChange={e=>setPrepData({...prepData, date: e.target.value})} className="w-full p-3 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" /></div>
+                                <div><label className="block text-sm font-bold mb-2 text-slate-700">اليوم</label><select value={prepData.day} onChange={e=>setPrepData({...prepData, day: e.target.value})} className="w-full p-3 border border-slate-300 rounded-xl bg-white font-bold outline-none focus:ring-2 focus:ring-blue-500">{days.map(d=><option key={d}>{d}</option>)}</select></div>
+                                <div><label className="block text-sm font-bold mb-2 text-slate-700">الحصة</label><select value={prepData.period} onChange={e=>setPrepData({...prepData, period: e.target.value})} className="w-full p-3 border border-slate-300 rounded-xl bg-white font-bold outline-none focus:ring-2 focus:ring-blue-500">{periods.map(p=><option key={p}>{p}</option>)}</select></div>
+                                <div>
+                                    <label className="block text-sm font-bold mb-2 text-slate-700">الصف والفصل</label>
+                                    <select required value={prepData.gradeClass} onChange={e=>setPrepData({...prepData, gradeClass: e.target.value})} className="w-full p-3 border border-slate-300 rounded-xl bg-white font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">-- اختر --</option>
+                                        {appSettings.grades.map(g => appSettings.classes.map(c => <option key={g+c} value={`${g} - ${c}`}>{g} / {c}</option>))}
+                                    </select>
+                                </div>
+                                <div className="col-span-2 md:col-span-4"><label className="block text-sm font-bold mb-2 text-slate-700">موضوع التجربة / الدرس</label><input required type="text" value={prepData.topic} onChange={e=>setPrepData({...prepData, topic: e.target.value})} className="w-full p-4 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-lg" placeholder="اكتب الموضوع هنا..." /></div>
+                            </div>
+                            
+                            <div className="border-t border-slate-200 pt-6">
+                                <h4 className="font-bold text-blue-800 mb-4 flex items-center gap-2"><Database className="w-5 h-5"/> اختيار المواد من جرد العهدة</h4>
+                                <div className="flex flex-col md:flex-row gap-3 items-end bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                                    <div className="flex-1 w-full"><label className="block text-xs font-bold mb-1 text-blue-900">المادة</label><select value={selectedMatId} onChange={e=>setSelectedMatId(e.target.value)} className="w-full p-3 border border-blue-200 rounded-xl bg-white font-bold outline-none focus:ring-2 focus:ring-blue-400"><option value="">-- قائمة أدوات المعمل الفعالة --</option>{inventory.filter(i=>i.lab===activeRole).map(i => <option key={i.id} value={i.id}>{i.name} (المتاح: {i.quantity} {i.unit})</option>)}</select></div>
+                                    <div className="w-full md:w-32"><label className="block text-xs font-bold mb-1 text-blue-900">الكمية</label><input type="number" min="0.1" step="0.1" value={selectedMatQty} onChange={e=>setSelectedMatQty(e.target.value)} className="w-full p-3 border border-blue-200 rounded-xl text-center font-bold outline-none focus:ring-2 focus:ring-blue-400 bg-white" placeholder="0.0" /></div>
+                                    <button type="button" onClick={handleAddMaterial} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow transition-colors w-full md:w-auto h-[46px] flex items-center justify-center">إضافة للقائمة</button>
+                                </div>
+                                {prepData.materials.length > 0 && (
+                                    <ul className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        {prepData.materials.map((m, idx) => (
+                                            <li key={idx} className="bg-white border border-blue-200 p-3 rounded-xl text-sm font-bold flex justify-between items-center shadow-sm">
+                                                <span className="text-slate-800">{m.name}</span><span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-lg">{m.qty} {m.unit}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                            <div className="border-t border-slate-200 pt-6">
+                                <label className="block text-sm font-bold mb-2 text-slate-700">مواد وأدوات أخرى متفرقة (خارج العهدة - إن وجد)</label>
+                                <textarea rows="3" value={prepData.otherMaterials} onChange={e=>setPrepData({...prepData, otherMaterials: e.target.value})} className="w-full p-4 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 focus:bg-white transition-colors" placeholder="ورق، مقصات، صلصال..."></textarea>
+                            </div>
+                            <button type="submit" className="w-full bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-700 transition-all text-lg mt-4 flex justify-center items-center gap-2"><Save className="w-5 h-5"/> حفظ وإصدار الإذن الإلكتروني</button>
+                        </form>
+                    )}
+
+                    {viewMode === 'manual' && (
+                        <div className="bg-white border border-slate-200 rounded-3xl p-12 shadow-sm text-center animate-in fade-in zoom-in-95 duration-500">
+                            <div className="bg-slate-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-200">
+                                <FileText className="w-12 h-12 text-slate-400" />
+                            </div>
+                            <h3 className="text-2xl font-black mb-3 text-slate-800">طباعة نموذج تفريغ ورقي</h3>
+                            <p className="text-slate-500 mb-8 max-w-md mx-auto leading-relaxed">استخدم هذا الخيار إذا كنت ترغب في طباعة نموذج فارغ ليتم تعبئته وتوقيعه يدوياً خارج النظام الإلكتروني.</p>
+                            <button onClick={() => printDocument('manual')} className="bg-slate-800 text-white font-bold px-10 py-4 rounded-2xl shadow-lg hover:shadow-slate-500/30 flex items-center gap-3 mx-auto transition-all active:scale-95 text-lg"><Printer className="w-6 h-6"/> طباعة النموذج / حفظ PDF</button>
+                        </div>
+                    )}
+
+                    {viewMode === 'view_prev' && (
+                        <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm animate-in fade-in min-h-[500px]">
+                            <div className="bg-slate-50 border border-slate-200 p-5 rounded-2xl mb-8 flex flex-col md:flex-row items-center gap-4">
+                                <label className="block text-sm font-bold text-slate-700 whitespace-nowrap">ابحث واختر الإذن للمعاينة:</label>
+                                <select value={selectedPrepId} onChange={e=>setSelectedPrepId(e.target.value)} className="w-full p-3.5 border border-slate-300 rounded-xl bg-white font-bold outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                                    <option value="">-- تصفح سجل الأذونات المعتمدة --</option>
+                                    {filteredPreps.map(p => <option key={p.id} value={p.id}>{p.date} | الحصة {p.period} | فصل {p.gradeClass} | الدرس: {p.topic}</option>)}
+                                </select>
+                            </div>
+
+                            {selectedPrepData ? (
+                                <div className="border border-slate-300 p-10 rounded-3xl max-w-3xl mx-auto bg-white shadow-lg relative overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
+                                    {/* شريط زينة علوي */}
+                                    <div className="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
+                                    
+                                    <div className="flex justify-between items-start mb-8 border-b border-slate-200 pb-6">
+                                        <div>
+                                            <h3 className="text-2xl font-black text-slate-800 mb-2">{selectedPrepData.topic}</h3>
+                                            <div className="text-xs font-mono text-slate-400 bg-slate-100 px-2 py-1 rounded inline-block">مرجع: {selectedPrepData.id}</div>
+                                        </div>
+                                        <button onClick={() => printDocument('electronic', selectedPrepData)} className="bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-200 font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 transition-colors"><Printer className="w-4 h-4"/> استخراج</button>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-y-6 font-bold text-slate-700 text-sm mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                        <div className="flex flex-col gap-1"><span className="text-slate-400 text-xs">التاريخ واليوم</span><span className="text-base">{selectedPrepData.date} ({selectedPrepData.day})</span></div>
+                                        <div className="flex flex-col gap-1"><span className="text-slate-400 text-xs">الحصة والفصل</span><span className="text-base text-blue-800 bg-blue-100/50 w-max px-2 rounded">{selectedPrepData.period} | {selectedPrepData.gradeClass}</span></div>
+                                        <div className="col-span-2 flex flex-col gap-1"><span className="text-slate-400 text-xs">المعلم المنفذ</span><span className="text-base text-slate-900">{selectedPrepData.teacherName}</span></div>
+                                    </div>
+                                    
+                                    <div className="mb-6">
+                                        <h4 className="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">الأدوات المستهلكة من العهدة:</h4>
+                                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            {selectedPrepData.materials.map((m,i)=><li key={i} className="flex justify-between border-b border-slate-100 pb-2 text-sm"><span className="font-bold text-slate-700">{m.name}</span><span className="text-slate-500 font-mono" dir="ltr">{m.qty} {m.unit}</span></li>)}
+                                            {selectedPrepData.materials.length === 0 && <span className="text-slate-400 text-sm">لم يتم سحب أدوات</span>}
+                                        </ul>
+                                    </div>
+                                    
+                                    {selectedPrepData.otherMaterials && (
+                                        <div className="mb-6">
+                                            <h4 className="font-bold text-slate-800 mb-2 border-b border-slate-100 pb-2">مواد أخرى إضافية:</h4>
+                                            <p className="text-sm text-slate-600 bg-slate-50 p-4 rounded-xl leading-relaxed">{selectedPrepData.otherMaterials}</p>
+                                        </div>
+                                    )}
+                                    
+                                    <div className="text-xs font-bold text-slate-400 text-center mt-12 bg-slate-50 py-2 rounded-lg">أُنشئ وصُدّق إلكترونياً بتاريخ: {selectedPrepData.createdDate}</div>
+                                </div>
+                            ) : (
+                                <div className="text-center mt-16 flex flex-col items-center">
+                                    <ClipboardList className="w-16 h-16 text-slate-200 mb-4"/>
+                                    <p className="text-slate-400 font-bold text-lg">الرجاء اختيار إذن من القائمة المنسدلة أعلاه لعرض التفاصيل واستخراجه.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // --- الجدول المدرسي ---
+        function ScheduleView({ activeRole, schedules, setSchedules, users, appSettings, user }) {
+            const [isEditing, setIsEditing] = useState(false);
+            const mySchedule = schedules[activeRole] || schedules['science_primary'];
+            const labTeachers = users.filter(u => u.role === activeRole && ['teacher', 'coordinator', 'supervisor'].includes(u.type));
+            const allClasses = appSettings.grades.flatMap(g => appSettings.classes.map(c => `${g} / ${c}`));
+            const canEdit = user.type === 'admin' || user.type === 'supervisor' || user.type === 'coordinator';
+
+            const handleCellChange = (day, period, field, value) => {
+                const updated = {...schedules};
+                if (!updated[activeRole]) return;
+                updated[activeRole][day][period][field] = value;
+                setSchedules(updated);
+            };
+
+            return (
+                <div className="space-y-6 animate-in fade-in">
+                    <ViewHeader title={`الجدول المدرسي - ${labsInfo[activeRole]?.name}`} desc="تسكين ومتابعة حصص المعمل الأسبوعية (8 حصص)" />
+                    
+                    {canEdit && (
+                        <div className="flex gap-2 mb-4 print:hidden bg-slate-50 p-2 rounded-xl w-fit border border-slate-200">
+                            <button onClick={() => setIsEditing(!isEditing)} className={`px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 transition-all ${isEditing ? 'bg-green-600 text-white shadow-md' : 'bg-white text-blue-700 border border-slate-200 hover:bg-blue-50'}`}>
+                                {isEditing ? <><Save className="w-4 h-4"/> حفظ التعديلات</> : <><Edit className="w-4 h-4"/> تفعيل وضع التعديل والتسكين</>}
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="overflow-x-auto bg-white border border-slate-200 rounded-3xl shadow-sm print:border-none print:shadow-none">
+                        <table className="w-full text-center border-collapse">
+                            <thead>
+                                <tr className="bg-slate-100 text-slate-800 border-b-2 border-slate-200">
+                                    <th className="p-4 border-l border-slate-200 w-32 font-black">اليوم / الحصة</th>{periods.map(p => <th className="p-4 border-l border-slate-200 text-sm font-black" key={p}>{p}</th>)}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {days.map(day => (
+                                    <tr key={day} className="border-b border-slate-200 hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-4 font-black bg-slate-50/80 border-l border-slate-200 text-slate-700">{day}</td>
+                                        {periods.map(period => {
+                                            const cell = mySchedule[day][period];
+                                            return (
+                                                <td key={period} className="border-l border-slate-200 p-2 align-top h-24 min-w-[140px]">
+                                                    {isEditing ? (
+                                                        <div className="space-y-2 h-full flex flex-col justify-center animate-in fade-in">
+                                                            <select value={cell.class} onChange={e=>handleCellChange(day, period, 'class', e.target.value)} className="w-full text-xs p-1.5 border border-blue-200 rounded-lg bg-blue-50 font-bold text-blue-900 outline-none focus:ring-1 focus:ring-blue-400"><option value="">- حدد الفصل -</option>{allClasses.map(c => <option key={c}>{c}</option>)}</select>
+                                                            <select value={cell.teacher} onChange={e=>handleCellChange(day, period, 'teacher', e.target.value)} className="w-full text-xs p-1.5 border border-slate-300 rounded-lg bg-white font-bold text-slate-700 outline-none focus:ring-1 focus:ring-blue-400"><option value="">- حدد المعلم -</option>{labTeachers.map(t => <option key={t.id}>{t.name}</option>)}</select>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-col h-full justify-center text-xs font-bold leading-relaxed">
+                                                            {cell.class ? (
+                                                                <div className="flex flex-col gap-1.5 animate-in zoom-in-95">
+                                                                    <span className="text-blue-900 bg-blue-100 py-1 px-2 rounded-md border border-blue-200 shadow-sm block w-max mx-auto">{cell.class}</span>
+                                                                    <span className="text-slate-700 line-clamp-2 leading-tight">{cell.teacher}</span>
+                                                                </div>
+                                                            ) : <span className="text-slate-200 text-xl font-light">-</span>}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                            )
+                                        })}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- أرشيف المحاضر ---
+        function MinutesView({ minutes, activeRole, activeYearFilter }) {
+            const visibleMinutes = (activeRole === 'admin' || activeRole === 'minutes_global' ? minutes : minutes.filter(m => m.lab === activeRole)).filter(m => m.year === activeYearFilter);
+            
+            const handlePrintMinute = (minute) => {
+                let committeeHtml = '';
+                if(minute.committee) {
+                    const members = minute.committee.split(',');
+                    committeeHtml = `<h3>أعضاء اللجنة:</h3><ol style="line-height:2.5;">${members.map(m=>`<li>${m.trim()} (التوقيع: .....................)</li>`).join('')}</ol>`;
+                }
+                const printContent = `
+                    <div dir="rtl" style="font-family: Arial; padding: 40px; border: 2px solid #000; max-width: 800px; margin: auto;">
+                        <h1 style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px;">${minute.type}</h1>
+                        <div style="margin-top: 30px; font-size: 16px; line-height: 2;">
+                            <p><strong>رقم المحضر:</strong> ${minute.id} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>العام الدراسي:</strong> ${minute.year}</p>
+                            <p><strong>التاريخ:</strong> ${new Date(minute.date).toLocaleDateString('ar-SA')}</p>
+                            <p><strong>المعمل:</strong> ${labsInfo[minute.lab]?.name || minute.lab}</p>
+                            <p><strong>المنشئ/المسؤول:</strong> ${minute.user}</p>
+                            <hr style="margin: 20px 0;">
+                            <h3>بيانات المادة أو الجهاز:</h3>
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                                <tr><td style="border: 1px solid #000; padding: 8px; font-weight:bold;">الصنف:</td><td style="border: 1px solid #000; padding: 8px;">${minute.item}</td></tr>
+                                <tr><td style="border: 1px solid #000; padding: 8px; font-weight:bold;">الكود:</td><td style="border: 1px solid #000; padding: 8px;">${minute.code}</td></tr>
+                                <tr><td style="border: 1px solid #000; padding: 8px; font-weight:bold;">الكمية:</td><td style="border: 1px solid #000; padding: 8px;">${minute.quantity} ${minute.unit}</td></tr>
+                            </table>
+                            <h3>السبب/التفاصيل:</h3>
+                            <p style="border: 1px solid #000; padding: 15px; min-height:60px; white-space: pre-wrap;">${minute.reason}</p>
+                            ${committeeHtml}
+                        </div>
+                        <div style="margin-top: 100px; display: flex; justify-content: space-between; text-align: center; font-weight: bold;">
+                            <div>محضر المعمل/المشرف<br><br>......................</div>
+                            <div>مدير المدرسة (الاعتماد)<br><br>......................</div>
+                        </div>
+                    </div>
+                `;
+                const win = window.open('', '', 'width=900,height=600');
+                win.document.write(`<html><head><title>طباعة محضر</title></head><body onload="window.print(); window.close();">${printContent}</body></html>`);
+                win.document.close();
+            };
+
+            return (
+                <div className="space-y-6 animate-in fade-in">
+                    <ViewHeader title="سجل المحاضر الرسمية" desc="تتبع وطباعة كافة محاضر الفقد، الكسر، الإعدام، ونقل العهدة" />
+                    <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+                        <table className="w-full text-right text-sm">
+                            <thead className="bg-slate-50 border-b border-slate-200"><tr><th className="p-5 font-bold text-slate-600">رقم وتاريخ</th><th className="p-5 font-bold text-slate-600">النوع</th><th className="p-5 font-bold text-slate-600">المادة والكمية</th><th className="p-5 font-bold text-slate-600">المعمل</th><th className="p-5 text-center font-bold text-slate-600">إجراء</th></tr></thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {visibleMinutes.map(m => (
+                                    <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-5"><div className="font-mono font-bold text-slate-800 bg-slate-100 w-max px-2 py-0.5 rounded border border-slate-200">{m.id}</div><div className="text-xs text-slate-500 mt-1" dir="ltr">{new Date(m.date).toLocaleDateString()}</div></td>
+                                        <td className="p-5 font-bold text-red-600">{m.type}</td>
+                                        <td className="p-5"><div className="font-bold text-slate-800 text-base">{m.item}</div><div className="text-xs font-bold text-slate-500 mt-1">الكمية المسجلة: {m.quantity}</div></td>
+                                        <td className="p-5 font-bold text-slate-600">{labsInfo[m.lab]?.name || m.lab}</td>
+                                        <td className="p-5 text-center"><button onClick={() => handlePrintMinute(m)} className="bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 mx-auto hover:bg-slate-700 shadow-sm transition-all active:scale-95"><Printer className="w-4 h-4"/> طباعة المحضر</button></td>
+                                    </tr>
+                                ))}
+                                {visibleMinutes.length === 0 && <tr><td colSpan="5" className="p-12 text-center text-slate-400 font-bold text-lg">لا توجد محاضر للعام المختار في هذا السجل</td></tr>}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- التقارير والطباعة ---
+        function ReportsView({ inventory, transactions, activeRole, activeYearFilter }) {
+            const [reportType, setReportType] = useState('inventory');
+            
+            const getLifetimeConsumed = (itemName) => {
+                return transactions.filter(t => ['consumption', 'disposal', 'breakage', 'loss', 'transfer_out'].includes(t.type) && t.item === itemName && t.lab === activeRole).reduce((sum, t) => sum + t.quantity, 0);
+            };
+
+            return (
+                <div className="space-y-6 animate-in fade-in">
+                    <ViewHeader title="التقارير الشاملة واستخراج البيانات" desc="إصدار تقارير الجرد، وسجل الاستهلاك، وطباعة الملصقات الباركود" />
+                    
+                    <div className="flex bg-slate-100 p-1.5 rounded-2xl gap-2 print:hidden w-fit shadow-inner mb-6">
+                        <button onClick={() => setReportType('inventory')} className={`px-5 py-3 rounded-xl font-bold text-sm transition-all ${reportType === 'inventory' ? 'bg-white shadow text-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}>تقرير العهدة الختامي</button>
+                        <button onClick={() => setReportType('consumption')} className={`px-5 py-3 rounded-xl font-bold text-sm transition-all ${reportType === 'consumption' ? 'bg-white shadow text-orange-600' : 'text-slate-600 hover:bg-slate-200'}`}>سجل حركات الاستهلاك التفصيلي</button>
+                        <button onClick={() => setReportType('codes')} className={`px-5 py-3 rounded-xl font-bold text-sm transition-all ${reportType === 'codes' ? 'bg-white shadow text-purple-600' : 'text-slate-600 hover:bg-slate-200'}`}>دليل الأكواد والملصقات</button>
+                    </div>
+
+                    <div className="bg-white rounded-3xl print:m-0 p-8 border border-slate-200 print:border-none print:p-0 shadow-sm">
+                        <div className="text-center mb-8 hidden print:block border-b-2 border-slate-800 pb-6">
+                            <h1 className="text-3xl font-black text-slate-900">{reportType === 'inventory' ? 'تقرير عهدة ومخزون المعمل' : reportType === 'consumption' ? 'سجل حركات الاستهلاك' : 'دليل الأكواد والباركود'}</h1>
+                            <p className="font-bold text-slate-700 mt-2 text-lg">المعمل: {labsInfo[activeRole]?.name} &nbsp;|&nbsp; العام الدراسي: {activeYearFilter}</p>
+                        </div>
+
+                        {reportType === 'inventory' && (
+                            <table className="w-full text-right border-collapse text-sm">
+                                <thead>
+                                    <tr className="bg-slate-100 border-y-2 border-slate-800 text-slate-800">
+                                        <th className="p-3 border-x border-slate-300 font-bold w-12 text-center">م</th><th className="p-3 border-x border-slate-300 font-bold">اسم الصنف</th><th className="p-3 border-x border-slate-300 font-bold">النوع</th>
+                                        <th className="p-3 border-x border-slate-300 bg-blue-100 font-bold text-center">الكمية الموردة</th><th className="p-3 border-x border-slate-300 bg-orange-100 font-bold text-center">مستهلك/منصرف</th><th className="p-3 border-x border-slate-300 bg-green-100 font-bold text-center">الباقي بالعهدة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {inventory.map((item, idx) => {
+                                        const consumed = getLifetimeConsumed(item.name);
+                                        const supplied = item.quantity + consumed;
+                                        return (
+                                            <tr key={item.id} className="border-b border-slate-300 hover:bg-slate-50 transition-colors">
+                                                <td className="p-3 border-x border-slate-300 text-center font-bold text-slate-600">{idx + 1}</td>
+                                                <td className="p-3 border-x border-slate-300 font-bold text-slate-900">{item.name} <span className="font-mono text-xs text-slate-400 bg-slate-100 px-1 rounded ml-1" dir="ltr">{item.code}</span></td>
+                                                <td className="p-3 border-x border-slate-300 text-xs font-bold text-slate-600">{item.type === 'permanent' ? 'مستديم' : 'مستهلك'}</td>
+                                                <td className="p-3 border-x border-slate-300 text-center font-bold text-blue-800 bg-blue-50/30 text-lg">{supplied}</td>
+                                                <td className="p-3 border-x border-slate-300 text-center font-bold text-orange-700 bg-orange-50/30 text-lg">{consumed === 0 ? '-' : consumed}</td>
+                                                <td className="p-3 border-x border-slate-300 text-center font-black text-green-700 bg-green-50/30 text-lg">{item.quantity} <span className="font-normal text-[10px] text-slate-500">{item.unit}</span></td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        )}
+
+                        {reportType === 'consumption' && (
+                            <table className="w-full text-right border-collapse text-sm">
+                                <thead>
+                                    <tr className="bg-slate-100 border-y-2 border-slate-800 text-slate-800">
+                                        <th className="border-x border-slate-300 p-3 font-bold w-24 text-center">التاريخ</th><th className="border-x border-slate-300 p-3 font-bold">نوع الحركة</th><th className="border-x border-slate-300 p-3 font-bold">الصنف</th><th className="border-x border-slate-300 p-3 font-bold text-center w-16">الكمية</th><th className="border-x border-slate-300 p-3 font-bold">ملاحظات / المعلم المنفذ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {transactions.filter(t => t.type !== 'supply' && t.lab === activeRole && t.year === activeYearFilter).map(tx => (
+                                        <tr key={tx.id} className="border-b border-slate-300 hover:bg-slate-50 transition-colors">
+                                            <td className="border-x border-slate-300 p-3 font-mono text-center text-slate-600" dir="ltr">{new Date(tx.date).toLocaleDateString('ar-SA')}</td>
+                                            <td className="border-x border-slate-300 p-3 font-bold text-orange-700">{tx.type === 'consumption' ? 'استهلاك' : tx.type === 'transfer_out' ? 'نقل عهدة' : tx.type === 'breakage' ? 'كسر/تالف' : tx.type === 'loss' ? 'فقدان' : 'إعدام'}</td>
+                                            <td className="border-x border-slate-300 p-3 font-bold text-slate-900">{tx.item}</td>
+                                            <td className="border-x border-slate-300 p-3 font-black text-center text-lg text-slate-800">{tx.quantity}</td>
+                                            <td className="border-x border-slate-300 p-3 text-xs font-bold text-slate-600 leading-relaxed">{tx.details || tx.user}</td>
+                                        </tr>
+                                    ))}
+                                    {transactions.filter(t => t.type !== 'supply' && t.lab === activeRole && t.year === activeYearFilter).length === 0 && <tr><td colSpan="5" className="p-8 text-center text-slate-400 font-bold">لا توجد حركات استهلاك مسجلة لهذا العام.</td></tr>}
+                                </tbody>
+                            </table>
+                        )}
+
+                        {reportType === 'codes' && (
+                            <div>
+                                <div className="mb-6 text-sm font-bold text-blue-800 print:hidden text-center bg-blue-50 p-4 rounded-xl border border-blue-200">
+                                    للطباعة كملصقات (ستيكرات قابلة للقص): تأكد من ضبط إعدادات الطابعة على (A4) وإزالة الهوامش (Margins: None).
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 print:gap-[2mm] print:grid-cols-3 w-full">
+                                    {inventory.map(item => (
+                                        <div key={`sticker-${item.id}`} className="border-2 border-slate-800 p-3 rounded-2xl text-center break-inside-avoid flex flex-col items-center justify-center bg-white shadow-sm" style={{ height: '3.8cm' }}>
+                                            <h4 className="font-bold text-slate-900 text-xs leading-tight mb-1 truncate w-full">{item.name}</h4><p className="text-[10px] font-bold text-slate-500 mb-1">{labsInfo[item.lab]?.name}</p>
+                                            <svg width="110" height="35" xmlns="http://www.w3.org/2000/svg" className="my-1"><rect width="110" height="35" fill="white"/><path d="M10 0h2v35h-2zm4 0h4v35h-4zm6 0h2v35h-2zm4 0h1v35h-1zm3 0h5v35h-5zm7 0h2v35h-2zm4 0h3v35h-3zm5 0h2v35h-2zm4 0h1v35h-1zm3 0h4v35h-4zm6 0h2v35h-2zm5 0h3v35h-3zm5 0h1v35h-1zm3 0h4v35h-4zm6 0h2v35h-2zm4 0h1v35h-1zm3 0h5v35h-5z" fill="black"/></svg>
+                                            <div className="flex justify-between items-center w-full px-2 mt-2"><span className="font-mono text-[11px] tracking-widest font-black text-slate-800">{item.barcode}</span><span className="text-[10px] font-bold bg-slate-200 px-2 py-0.5 rounded border border-slate-300">{item.code}</span></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
