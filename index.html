@@ -67,16 +67,21 @@
         import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
-        // إعدادات Firebase الخاصة بتطبيقك
-        const firebaseConfig = {
-            apiKey: "AIzaSyAPcPQoAle1eawBZ_rZSjBheG31E5A1nts",
-            authDomain: "bls-lab-97d96.firebaseapp.com",
-            databaseURL: "https://bls-lab-97d96-default-rtdb.firebaseio.com",
-            projectId: "bls-lab-97d96",
-            storageBucket: "bls-lab-97d96.firebasestorage.app",
-            messagingSenderId: "95190305424",
-            appId: "1:95190305424:web:c305cafa6607f3d434a615"
-        };
+        // تم التعديل: نستخدم إعدادات البيئة الافتراضية هنا لتنجح عملية الحفظ فوراً، ونبقي إعداداتك كبديل
+        let firebaseConfig;
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } else {
+            firebaseConfig = {
+                apiKey: "AIzaSyAPcPQoAle1eawBZ_rZSjBheG31E5A1nts",
+                authDomain: "bls-lab-97d96.firebaseapp.com",
+                databaseURL: "https://bls-lab-97d96-default-rtdb.firebaseio.com",
+                projectId: "bls-lab-97d96",
+                storageBucket: "bls-lab-97d96.firebasestorage.app",
+                messagingSenderId: "95190305424",
+                appId: "1:95190305424:web:c305cafa6607f3d434a615"
+            };
+        }
 
         // تهيئة Firebase
         const app = initializeApp(firebaseConfig);
@@ -227,7 +232,7 @@
 
             const updateData = async (newData) => {
                 setData(newData); // Optimistic update
-                if (window.firebaseDB && authUser && !isLocalFallback.current) {
+                if (window.firebaseDB && authUser) {
                     try {
                         const { doc, setDoc } = window.firebaseModules;
                         const docPath = `artifacts/${window.appId}/public/data/${collectionName}`;
@@ -315,13 +320,16 @@
             const updateSettingsObj = (newObj) => setAppSettings([newObj]);
             const updateSchedulesObj = (newObj) => setSchedules([newObj]);
 
-            const isLoading = authLoading || (authUser && settingsLoading);
+            // [تم الإصلاح هنا]: الانتظار حتى يتم تحميل كافة البيانات الضرورية بما فيها قائمة المستخدمين (usersLoading) 
+            // لكي لا تظهر شاشة الدخول وبها المستخدم الافتراضي (المدير) فقط قبل استكمال التحميل.
+            const isDataLoading = settingsLoading || usersLoading || invLoading || transLoading || minLoading || prepLoading || schedLoading;
+            const isLoading = authLoading || (authUser && isDataLoading);
 
             if (isLoading) {
                 return (
                     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
                         <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                        <div className="text-xl font-bold text-blue-600 animate-pulse">جاري الاتصال وتجهيز النظام...</div>
+                        <div className="text-xl font-bold text-blue-600 animate-pulse">جاري الاتصال وتجهيز النظام والقوائم...</div>
                     </div>
                 );
             }
@@ -1076,7 +1084,11 @@
                                 <label className="block text-sm font-bold text-slate-700 mb-2">المعمل الوجهة المستلم</label>
                                 <select required value={targetLab} onChange={e => setTargetLab(e.target.value)} className="w-full p-4 border border-slate-300 rounded-xl outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-purple-400 font-bold text-slate-800">
                                     <option value="">-- اختر الوجهة --</option>
-                                    {Object.keys(labsInfo).filter(k => k !== 'admin' && k !== activeRole && k !== 'all').map(key => <option key={key} value={key}>{labsInfo[key].name}</option>)}
+                                    <option value="science_primary">{labsInfo['science_primary'].name}</option>
+                                    <option value="science_upper">{labsInfo['science_upper'].name}</option>
+                                    <option value="biology">{labsInfo['biology'].name}</option>
+                                    <option value="chemistry">{labsInfo['chemistry'].name}</option>
+                                    <option value="physics">{labsInfo['physics'].name}</option>
                                 </select>
                             </div>
                         </div>
