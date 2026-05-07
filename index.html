@@ -164,7 +164,7 @@
         };
 
         const initialUsers = [
-            { id: 'u1', username: 'Mahmoud', password: 'Ma@521990', role: 'admin', type: 'admin', name: 'مدير النظام محمود', stages: [], grades: [], classes: [] },
+            { id: 'u1', username: 'Mahmoud', password: 'Ma@521990', role: 'admin', type: 'admin', name: 'مدير النظام محمود', stages: [], grades: [], classes: [], schools: ['الجميع'] },
         ];
 
         const labsInfo = {
@@ -481,7 +481,19 @@
             const [subLab, setSubLab] = useState('science_primary');
             const effectiveRole = activeRole === 'all' ? subLab : activeRole;
             
-            const userInventory = effectiveRole === 'admin' ? inventory : inventory.filter(item => item.lab === effectiveRole);
+            // تحديد نطاق المدارس المسموح بها للمستخدم
+            const userSchools = (user.type === 'admin' || !user.schools || user.schools.includes('الجميع') || user.schools.length === 0) ? appSettings.schools : user.schools;
+            const [activeSchoolFilter, setActiveSchoolFilter] = useState(userSchools[0] || appSettings.currentSchool);
+
+            useEffect(() => {
+                if (!userSchools.includes(activeSchoolFilter) && userSchools.length > 0) {
+                    setActiveSchoolFilter(userSchools[0]);
+                }
+            }, [userSchools, activeSchoolFilter]);
+            
+            // فلترة العهدة بناءً على المدرسة النشطة
+            const schoolInventory = inventory.filter(item => !item.school || item.school === activeSchoolFilter);
+            const userInventory = effectiveRole === 'admin' ? schoolInventory : schoolInventory.filter(item => item.lab === effectiveRole);
             const isTeacher = user.type === 'teacher';
 
             const menuItems = [
@@ -537,6 +549,12 @@
                                             {appSettings.years.map(y => <option key={y} value={y}>{y}</option>)}
                                         </select>
                                     </div>
+                                    <div className="flex items-center gap-2 font-bold text-emerald-700 border-r-2 border-slate-200 pr-4">
+                                        <span className="text-sm bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200">المدرسة:</span>
+                                        <select value={activeSchoolFilter} onChange={e=>setActiveSchoolFilter(e.target.value)} className="border-2 border-emerald-200 p-1.5 rounded-lg bg-emerald-50 outline-none text-sm text-emerald-800 focus:border-emerald-500 transition-colors cursor-pointer max-w-[200px] truncate">
+                                            {userSchools.map(s => <option key={s} value={s}>{s}</option>)}
+                                        </select>
+                                    </div>
                                     {activeRole === 'all' && (
                                         <div className="flex items-center gap-2 font-bold text-indigo-700 border-r-2 border-slate-200 pr-4">
                                             <span className="text-sm bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200">اختر المعمل:</span>
@@ -547,8 +565,6 @@
                                     )}
                                 </div>
                                 <div className="text-xs font-bold text-slate-500 bg-slate-100 border border-slate-200 px-4 py-2 rounded-xl flex items-center gap-2">
-                                    <span>{appSettings.currentSchool}</span>
-                                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
                                     <span>{appSettings.currentTerm}</span>
                                 </div>
                             </header>
@@ -558,16 +574,16 @@
                                 {activeTab === 'settings' && <StructureSettingsView appSettings={appSettings} setAppSettings={setAppSettings} />}
                                 {activeTab === 'users' && <UsersManagementView users={users} setUsers={setUsers} appSettings={appSettings} />}
                                 
-                                {activeTab === 'inventory' && <InventoryView inventory={userInventory} user={user} setInventory={setInventory} setMinutes={setMinutes} minutes={minutes} activeRole={effectiveRole} appSettings={appSettings} setTransactions={setTransactions} transactions={transactions} users={users} />}
-                                {activeTab === 'supply' && <SupplyView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={effectiveRole} user={user} appSettings={appSettings} />}
-                                {activeTab === 'consumption' && <ConsumptionView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={effectiveRole} user={user} appSettings={appSettings} users={users} />}
-                                {activeTab === 'expiry' && <ExpiryView inventory={userInventory} setInventory={setInventory} minutes={minutes} setMinutes={setMinutes} transactions={transactions} setTransactions={setTransactions} user={user} activeRole={effectiveRole} appSettings={appSettings} />}
-                                {activeTab === 'transfer' && <TransferView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={effectiveRole} user={user} appSettings={appSettings} minutes={minutes} setMinutes={setMinutes} />}
+                                {activeTab === 'inventory' && <InventoryView inventory={inventory} user={user} setInventory={setInventory} setMinutes={setMinutes} minutes={minutes} activeRole={effectiveRole} appSettings={appSettings} setTransactions={setTransactions} transactions={transactions} users={users} activeSchoolFilter={activeSchoolFilter} />}
+                                {activeTab === 'supply' && <SupplyView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={effectiveRole} user={user} appSettings={appSettings} activeSchoolFilter={activeSchoolFilter} />}
+                                {activeTab === 'consumption' && <ConsumptionView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={effectiveRole} user={user} appSettings={appSettings} users={users} activeSchoolFilter={activeSchoolFilter} />}
+                                {activeTab === 'expiry' && <ExpiryView inventory={inventory} setInventory={setInventory} minutes={minutes} setMinutes={setMinutes} transactions={transactions} setTransactions={setTransactions} user={user} activeRole={effectiveRole} appSettings={appSettings} activeSchoolFilter={activeSchoolFilter} />}
+                                {activeTab === 'transfer' && <TransferView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={effectiveRole} user={user} appSettings={appSettings} minutes={minutes} setMinutes={setMinutes} activeSchoolFilter={activeSchoolFilter} />}
                                 
-                                {activeTab === 'preparation' && <EPreparationView preparations={preparations} setPreparations={setPreparations} inventory={userInventory} user={user} activeRole={effectiveRole} appSettings={appSettings} activeYearFilter={activeYearFilter} />}
-                                {activeTab === 'schedule' && <ScheduleView activeRole={effectiveRole} schedules={schedules} setSchedules={setSchedules} users={users} appSettings={appSettings} user={user} />}
-                                {activeTab === 'minutes' && <MinutesView minutes={minutes} activeRole={effectiveRole} activeYearFilter={activeYearFilter} />}
-                                {activeTab === 'reports' && <ReportsView inventory={userInventory} transactions={transactions} activeRole={effectiveRole} activeYearFilter={activeYearFilter} />}
+                                {activeTab === 'preparation' && <EPreparationView preparations={preparations} setPreparations={setPreparations} inventory={inventory} user={user} activeRole={effectiveRole} appSettings={appSettings} activeYearFilter={activeYearFilter} activeSchoolFilter={activeSchoolFilter} />}
+                                {activeTab === 'schedule' && <ScheduleView activeRole={effectiveRole} schedules={schedules} setSchedules={setSchedules} users={users} appSettings={appSettings} user={user} activeSchoolFilter={activeSchoolFilter} />}
+                                {activeTab === 'minutes' && <MinutesView minutes={minutes} activeRole={effectiveRole} activeYearFilter={activeYearFilter} activeSchoolFilter={activeSchoolFilter} />}
+                                {activeTab === 'reports' && <ReportsView inventory={inventory} transactions={transactions} activeRole={effectiveRole} activeYearFilter={activeYearFilter} activeSchoolFilter={activeSchoolFilter} />}
                             </div>
                         </div>
                     </main>
@@ -652,14 +668,13 @@
 
         // --- إدارة وتسكين المستخدمين ---
         function UsersManagementView({ users, setUsers, appSettings }) {
-            const [formData, setFormData] = useState({ id: null, username: '', password: '', role: 'science_primary', type: 'teacher', name: '', stages: [], grades: [], classes: [] });
+            const [formData, setFormData] = useState({ id: null, username: '', password: '', role: 'science_primary', type: 'teacher', name: '', stages: [], grades: [], classes: [], schools: ['الجميع'] });
             const [isEditing, setIsEditing] = useState(false);
 
             const toggleArrayItem = (arr, item) => arr.includes(item) ? arr.filter(i => i !== item) : [...arr, item];
 
             const handleSubmit = (e) => {
                 e.preventDefault();
-                // تم التأكد من إزالة المسافات الزائدة من اسم المستخدم أثناء الإنشاء
                 const cleanUsername = formData.username.trim(); 
                 
                 if (isEditing) {
@@ -669,15 +684,15 @@
                     if (users.find(u => u.username === cleanUsername)) return alert("اسم المستخدم موجود مسبقاً!");
                     setUsers([...users, { id: 'u' + Date.now(), ...formData, username: cleanUsername }]);
                 }
-                setFormData({ id: null, username: '', password: '', role: 'science_primary', type: 'teacher', name: '', stages: [], grades: [], classes: [] });
+                setFormData({ id: null, username: '', password: '', role: 'science_primary', type: 'teacher', name: '', stages: [], grades: [], classes: [], schools: ['الجميع'] });
             };
 
-            const handleEdit = (u) => { setFormData(u); setIsEditing(true); };
+            const handleEdit = (u) => { setFormData({...u, schools: u.schools || ['الجميع']}); setIsEditing(true); };
             const handleDelete = (id) => { if(window.confirm("تأكيد الحذف؟")) setUsers(users.filter(u => u.id !== id)); };
 
             return (
                 <div className="animate-in fade-in">
-                    <ViewHeader title="إدارة وتسكين المستخدمين" desc="توزيع المعلمين والمشرفين على المعامل والفصول" />
+                    <ViewHeader title="إدارة وتسكين المستخدمين" desc="توزيع المعلمين والمشرفين على المعامل والفصول والمدارس" />
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
                         <div className="xl:col-span-1 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm sticky top-6">
                             <h3 className="text-xl font-bold mb-4 border-b pb-2">{isEditing ? 'تعديل وتسكين مستخدم' : 'إضافة مستخدم جديد'}</h3>
@@ -691,16 +706,30 @@
                                     <div className="flex-1"><label className="block text-xs font-bold mb-1 text-slate-600">الرتبة</label><select value={formData.type} onChange={e=>setFormData({...formData, type: e.target.value})} className="w-full p-2.5 text-sm border border-slate-300 rounded-xl bg-white font-bold focus:ring-2 focus:ring-blue-500">{Object.entries(userTypes).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
                                     {formData.type !== 'admin' && <div className="flex-1"><label className="block text-xs font-bold mb-1 text-slate-600">المعمل</label><select value={formData.role} onChange={e=>setFormData({...formData, role: e.target.value})} className="w-full p-2.5 text-sm border border-slate-300 rounded-xl bg-white font-bold focus:ring-2 focus:ring-blue-500">{Object.keys(labsInfo).filter(k=>k!=='admin').map(k => <option key={k} value={k}>{labsInfo[k].name}</option>)}</select></div>}
                                 </div>
+                                
+                                <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-4 mt-4">
+                                    <h4 className="font-bold text-sm text-blue-800 border-b border-slate-200 pb-2">نطاق المدارس (تسكين المدارس)</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        <button type="button" onClick={()=>setFormData({...formData, schools: ['الجميع']})} className={`text-xs px-3 py-1.5 border rounded-lg font-bold transition-colors ${formData.schools?.includes('الجميع') || !formData.schools?.length ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-100'}`}>الجميع (صلاحية كاملة)</button>
+                                        {appSettings.schools.map(s => (
+                                            <button type="button" key={s} onClick={()=>{
+                                                let current = formData.schools?.filter(x => x !== 'الجميع') || [];
+                                                setFormData({...formData, schools: toggleArrayItem(current, s)});
+                                            }} className={`text-xs px-3 py-1.5 border rounded-lg font-bold transition-colors ${formData.schools?.includes(s) && !formData.schools?.includes('الجميع') ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-100'}`}>{s}</button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 {formData.type !== 'admin' && (
-                                    <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-4 mt-4">
-                                        <h4 className="font-bold text-sm text-blue-800 border-b border-slate-200 pb-2">تسكين الهيكلة (اختيار متعدد)</h4>
+                                    <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-4">
+                                        <h4 className="font-bold text-sm text-blue-800 border-b border-slate-200 pb-2">نطاق الفصول (اختياري)</h4>
                                         <div><span className="text-xs font-bold text-slate-500 block mb-2">المراحل:</span><div className="flex flex-wrap gap-2">{appSettings.stages.map(s => <button type="button" key={s} onClick={()=>setFormData({...formData, stages: toggleArrayItem(formData.stages, s)})} className={`text-xs px-3 py-1.5 border rounded-lg font-bold transition-colors ${formData.stages?.includes(s) ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-100'}`}>{s}</button>)}</div></div>
                                         <div><span className="text-xs font-bold text-slate-500 block mb-2">الصفوف:</span><div className="flex flex-wrap gap-2">{appSettings.grades.map(s => <button type="button" key={s} onClick={()=>setFormData({...formData, grades: toggleArrayItem(formData.grades, s)})} className={`text-xs px-3 py-1.5 border rounded-lg font-bold transition-colors ${formData.grades?.includes(s) ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-100'}`}>{s}</button>)}</div></div>
                                         <div><span className="text-xs font-bold text-slate-500 block mb-2">الفصول:</span><div className="flex flex-wrap gap-2">{appSettings.classes.map(s => <button type="button" key={s} onClick={()=>setFormData({...formData, classes: toggleArrayItem(formData.classes, s)})} className={`text-xs px-3 py-1.5 border rounded-lg font-bold transition-colors ${formData.classes?.includes(s) ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-100'}`}>{s}</button>)}</div></div>
                                     </div>
                                 )}
                                 <button type="submit" className={`w-full text-white font-bold py-3.5 mt-6 rounded-xl shadow-md transition-all ${isEditing ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700'}`}>{isEditing ? 'تحديث البيانات' : 'حفظ المستخدم الجديد'}</button>
-                                {isEditing && <button type="button" onClick={()=>{setIsEditing(false); setFormData({ id: null, username: '', password: '', role: 'science_primary', type: 'teacher', name: '', stages:[], grades:[], classes:[] })}} className="w-full text-slate-500 font-bold py-2 hover:bg-slate-100 rounded-xl transition-colors">إلغاء التعديل</button>}
+                                {isEditing && <button type="button" onClick={()=>{setIsEditing(false); setFormData({ id: null, username: '', password: '', role: 'science_primary', type: 'teacher', name: '', stages:[], grades:[], classes:[], schools: ['الجميع'] })}} className="w-full text-slate-500 font-bold py-2 hover:bg-slate-100 rounded-xl transition-colors">إلغاء التعديل</button>}
                             </form>
                         </div>
                         <div className="xl:col-span-2 bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
@@ -711,7 +740,11 @@
                                         <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
                                             <td className="p-4"><div className="font-bold text-slate-800 text-base">{u.name}</div><div className="font-mono text-xs text-slate-400 mt-1" dir="ltr">{u.username} | {u.password}</div></td>
                                             <td className="p-4"><div className="font-bold text-blue-700 text-sm">{userTypes[u.type]}</div>{u.type !== 'admin' && <div className="text-[10px] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full mt-1.5 inline-block font-bold text-slate-600">{labsInfo[u.role]?.name}</div>}</td>
-                                            <td className="p-4 text-[11px] font-bold text-slate-500 space-y-1">{u.type !== 'admin' ? <><div><span className="text-slate-400">مراحل:</span> {u.stages?.join('، ') || '-'}</div><div><span className="text-slate-400">صفوف:</span> {u.grades?.join('، ') || '-'}</div><div><span className="text-slate-400">فصول:</span> {u.classes?.join('، ') || '-'}</div></> : <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full border border-purple-200">صلاحيات مطلقة</span>}</td>
+                                            <td className="p-4 text-[11px] font-bold text-slate-500 space-y-1">
+                                                <div><span className="text-slate-400">المدارس:</span> {u.schools?.includes('الجميع') || !u.schools?.length ? <span className="text-blue-600">الجميع</span> : u.schools.join('، ')}</div>
+                                                {u.type !== 'admin' && <><div><span className="text-slate-400">مراحل:</span> {u.stages?.join('، ') || '-'}</div><div><span className="text-slate-400">صفوف:</span> {u.grades?.join('، ') || '-'}</div><div><span className="text-slate-400">فصول:</span> {u.classes?.join('، ') || '-'}</div></>}
+                                                {u.type === 'admin' && <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full border border-purple-200 mt-1 inline-block">صلاحيات مطلقة</span>}
+                                            </td>
                                             <td className="p-4 text-center">
                                                 <div className="flex justify-center gap-2">
                                                     <button onClick={() => handleEdit(u)} className="text-blue-500 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors" title="تعديل"><Edit className="w-4 h-4"/></button>
@@ -729,14 +762,14 @@
         }
 
         // --- الجرد ومحاضر الكسر والفقد المدمجة ---
-        function InventoryView({ inventory, user, setInventory, setMinutes, minutes, activeRole, appSettings, setTransactions, transactions, users }) {
+        function InventoryView({ inventory, user, setInventory, setMinutes, minutes, activeRole, appSettings, setTransactions, transactions, users, activeSchoolFilter }) {
             const [filter, setFilter] = useState('all');
             const [search, setSearch] = useState('');
             
             const [incidentForm, setIncidentForm] = useState(null); 
             const [incidentData, setIncidentData] = useState({ qty: '', date: '', day: days[0], period: periods[0], gradeClass: '', teacher: '', responsible: '' });
 
-            const labTeachers = users.filter(u => (u.role === activeRole || u.role === 'all') && ['teacher', 'coordinator', 'supervisor'].includes(u.type));
+            const labTeachers = users.filter(u => (u.role === activeRole || u.role === 'all') && ['teacher', 'coordinator', 'supervisor'].includes(u.type) && (u.schools?.includes('الجميع') || u.schools?.includes(activeSchoolFilter) || !u.schools?.length));
             const allClasses = appSettings.grades.flatMap(g => appSettings.classes.map(c => `${g} / ${c}`));
 
             const submitIncident = (e) => {
@@ -753,15 +786,17 @@
                 
                 const reasonText = `التاريخ: ${incidentData.date} | الحصة: ${incidentData.period}\nالفصل: ${incidentData.gradeClass} | المعلم: ${incidentData.teacher}\nالمسؤول: ${incidentData.responsible}`;
                 
-                setMinutes([{ id: minuteId, type: minuteType, item: incidentForm.item.name, code: incidentForm.item.code, quantity: qty, unit: incidentForm.item.unit, date: new Date().toISOString(), lab: activeRole, user: user.name, reason: reasonText, year: appSettings.currentYear }, ...minutes]);
-                setTransactions([{ id: Date.now(), type: txType, item: incidentForm.item.name, quantity: qty, date: new Date().toISOString(), user: incidentData.teacher || user.name, lab: activeRole, year: appSettings.currentYear, details: reasonText }, ...transactions]);
+                setMinutes([{ id: minuteId, type: minuteType, item: incidentForm.item.name, code: incidentForm.item.code, quantity: qty, unit: incidentForm.item.unit, date: new Date().toISOString(), lab: activeRole, user: user.name, reason: reasonText, year: appSettings.currentYear, school: activeSchoolFilter }, ...minutes]);
+                setTransactions([{ id: Date.now(), type: txType, item: incidentForm.item.name, quantity: qty, date: new Date().toISOString(), user: incidentData.teacher || user.name, lab: activeRole, year: appSettings.currentYear, details: reasonText, school: activeSchoolFilter }, ...transactions]);
 
                 alert(`تم إنشاء ${minuteType} وخصم الكمية بنجاح.`);
                 setIncidentForm(null);
                 setIncidentData({ qty: '', date: '', day: days[0], period: periods[0], gradeClass: '', teacher: '', responsible: '' });
             };
 
-            const filtered = inventory.filter(item => {
+            const schoolInventory = inventory.filter(i => (!i.school || i.school === activeSchoolFilter) && (activeRole === 'admin' || i.lab === activeRole));
+            
+            const filtered = schoolInventory.filter(item => {
                 const matchesFilter = filter === 'all' || item.type === filter;
                 const matchesSearch = item.name.includes(search) || item.code.includes(search);
                 return matchesFilter && matchesSearch;
@@ -829,7 +864,7 @@
                                         </td>
                                     </tr>
                                 ))}
-                                {filtered.length === 0 && <tr><td colSpan="5" className="p-12 text-center text-slate-400 font-bold text-lg">لا توجد أصناف مطابقة لعملية البحث</td></tr>}
+                                {filtered.length === 0 && <tr><td colSpan="5" className="p-12 text-center text-slate-400 font-bold text-lg">لا توجد أصناف مطابقة لعملية البحث في هذه المدرسة</td></tr>}
                             </tbody>
                         </table>
                     </div>
@@ -838,7 +873,7 @@
         }
 
         // --- التوريد ---
-        function SupplyView({ inventory, setInventory, setTransactions, activeRole, user, appSettings }) {
+        function SupplyView({ inventory, setInventory, setTransactions, activeRole, user, appSettings, activeSchoolFilter }) {
             const [formData, setFormData] = useState({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', lab: activeRole });
             const [msg, setMsg] = useState('');
             const generateCode = (lab) => `${lab.substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
@@ -847,10 +882,10 @@
                 e.preventDefault();
                 const newCode = generateCode(formData.lab);
                 const newBarcode = Math.floor(1000000 + Math.random() * 9000000).toString();
-                const newItem = { id: Date.now().toString(), code: newCode, barcode: newBarcode, ...formData, quantity: parseFloat(formData.quantity) };
+                const newItem = { id: Date.now().toString(), code: newCode, barcode: newBarcode, ...formData, quantity: parseFloat(formData.quantity), school: activeSchoolFilter };
                 setInventory([...inventory, newItem]);
-                setTransactions(prev => [...prev, { id: Date.now(), type: 'supply', item: newItem.name, quantity: newItem.quantity, date: new Date().toISOString(), user: user.name, lab: formData.lab, year: appSettings.currentYear }]);
-                setMsg(`تم التوريد بنجاح. الكود: ${newCode}`);
+                setTransactions(prev => [...prev, { id: Date.now(), type: 'supply', item: newItem.name, quantity: newItem.quantity, date: new Date().toISOString(), user: user.name, lab: formData.lab, year: appSettings.currentYear, school: activeSchoolFilter }]);
+                setMsg(`تم التوريد بنجاح لـ ${activeSchoolFilter}. الكود: ${newCode}`);
                 setFormData({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', lab: activeRole });
                 setTimeout(() => setMsg(''), 4000);
             };
@@ -867,16 +902,16 @@
                             <div><label className="block text-sm font-bold text-slate-700 mb-2">الوحدة القياسية</label><input required type="text" value={formData.unit} onChange={e=>setFormData({...formData, unit: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" placeholder="لتر، جهاز، حبة..."/></div>
                             {formData.type === 'consumable' && <div><label className="block text-sm font-bold text-slate-700 mb-2">تاريخ الصلاحية</label><input required type="date" value={formData.expiryDate} onChange={e=>setFormData({...formData, expiryDate: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>}
                         </div>
-                        <button type="submit" className="w-full bg-blue-600 text-white font-bold py-4 mt-4 rounded-xl shadow-lg hover:shadow-blue-500/30 hover:bg-blue-700 transition-all text-lg flex items-center justify-center gap-2"><PackagePlus className="w-6 h-6"/> تسجيل الصنف في العهدة</button>
+                        <button type="submit" className="w-full bg-blue-600 text-white font-bold py-4 mt-4 rounded-xl shadow-lg hover:shadow-blue-500/30 hover:bg-blue-700 transition-all text-lg flex items-center justify-center gap-2"><PackagePlus className="w-6 h-6"/> تسجيل الصنف في عهدة المدرسة</button>
                     </form>
                 </div>
             );
         }
 
         // --- الاستهلاك ---
-        function ConsumptionView({ inventory, setInventory, setTransactions, activeRole, user, appSettings, users }) {
-            const consumableItems = inventory.filter(i => i.lab === activeRole && i.type === 'consumable' && i.quantity > 0);
-            const labTeachers = users.filter(u => (u.role === activeRole || u.role === 'all') && ['teacher', 'coordinator', 'supervisor'].includes(u.type));
+        function ConsumptionView({ inventory, setInventory, setTransactions, activeRole, user, appSettings, users, activeSchoolFilter }) {
+            const consumableItems = inventory.filter(i => (!i.school || i.school === activeSchoolFilter) && i.lab === activeRole && i.type === 'consumable' && i.quantity > 0);
+            const labTeachers = users.filter(u => (u.role === activeRole || u.role === 'all') && ['teacher', 'coordinator', 'supervisor'].includes(u.type) && (u.schools?.includes('الجميع') || u.schools?.includes(activeSchoolFilter) || !u.schools?.length));
             const allClasses = appSettings.grades.flatMap(g => appSettings.classes.map(c => `${g} / ${c}`));
 
             const [formData, setFormData] = useState({ itemId: '', qty: '', date: '', day: days[0], period: periods[0], gradeClass: '', teacher: '' });
@@ -898,7 +933,7 @@
                 setTransactions(prev => [...prev, { 
                     id: Date.now(), type: 'consumption', item: item.name, quantity: consumeQty, 
                     date: formData.date || new Date().toISOString().split('T')[0], 
-                    user: formData.teacher || user.name, lab: activeRole, year: appSettings.currentYear,
+                    user: formData.teacher || user.name, lab: activeRole, year: appSettings.currentYear, school: activeSchoolFilter,
                     details: detailsStr
                 }]);
                 
@@ -933,8 +968,8 @@
         }
 
         // --- الصلاحية والإعدام المدمج ---
-        function ExpiryView({ inventory, setInventory, minutes, setMinutes, transactions, setTransactions, user, activeRole, appSettings }) {
-            const consumableItems = inventory.filter(i => i.lab === activeRole && i.type === 'consumable' && i.expiryDate);
+        function ExpiryView({ inventory, setInventory, minutes, setMinutes, transactions, setTransactions, user, activeRole, appSettings, activeSchoolFilter }) {
+            const consumableItems = inventory.filter(i => (!i.school || i.school === activeSchoolFilter) && i.lab === activeRole && i.type === 'consumable' && i.expiryDate);
             const today = new Date();
             
             const [disposeForm, setDisposeForm] = useState(null); 
@@ -951,11 +986,11 @@
                 const minuteId = 'DISP-' + Math.floor(1000 + Math.random() * 9000);
                 setMinutes([{ 
                     id: minuteId, type: 'محضر إعدام مواد', item: disposeForm.item.name, code: disposeForm.item.code, quantity: disposeForm.item.quantity, unit: disposeForm.item.unit, 
-                    date: new Date().toISOString(), lab: activeRole, user: user.name, reason: 'انتهاء الصلاحية وتلف المادة', committee: committee, year: appSettings.currentYear 
+                    date: new Date().toISOString(), lab: activeRole, user: user.name, reason: 'انتهاء الصلاحية وتلف المادة', committee: committee, year: appSettings.currentYear, school: activeSchoolFilter 
                 }, ...minutes]);
                 
                 // تسجيله كـ إعدام في الـ transactions
-                setTransactions([{ id: Date.now(), type: 'disposal', item: disposeForm.item.name, quantity: disposeForm.item.quantity, date: new Date().toISOString(), user: user.name, lab: activeRole, year: appSettings.currentYear, details: `لجنة: ${committee}` }, ...transactions]);
+                setTransactions([{ id: Date.now(), type: 'disposal', item: disposeForm.item.name, quantity: disposeForm.item.quantity, date: new Date().toISOString(), user: user.name, lab: activeRole, year: appSettings.currentYear, details: `لجنة: ${committee}`, school: activeSchoolFilter }, ...transactions]);
                 
                 alert('تم إعدام المادة وتصفيرها وإنشاء المحضر بنجاح.');
                 setDisposeForm(null); setCommittee('');
@@ -1023,13 +1058,13 @@
         }
 
         // --- نقل العهدة ---
-        function TransferView({ inventory, setInventory, transactions, setTransactions, activeRole, user, appSettings, minutes, setMinutes }) {
+        function TransferView({ inventory, setInventory, transactions, setTransactions, activeRole, user, appSettings, minutes, setMinutes, activeSchoolFilter }) {
             const [selectedItemId, setSelectedItemId] = useState('');
             const [targetLab, setTargetLab] = useState('');
             const [qty, setQty] = useState('');
             const [msg, setMsg] = useState({ type: '', text: '' });
 
-            const availableItems = inventory.filter(i => i.lab === activeRole && i.quantity > 0);
+            const availableItems = inventory.filter(i => (!i.school || i.school === activeSchoolFilter) && i.lab === activeRole && i.quantity > 0);
 
             const handleTransfer = (e) => {
                 e.preventDefault();
@@ -1043,15 +1078,15 @@
                 let updatedInventory = [...inventory];
                 updatedInventory[itemIndex].quantity -= transferQty;
 
-                const existingTargetItemIndex = updatedInventory.findIndex(i => i.code === sourceItem.code && i.lab === targetLab);
+                const existingTargetItemIndex = updatedInventory.findIndex(i => i.code === sourceItem.code && i.lab === targetLab && (!i.school || i.school === activeSchoolFilter));
                 if (existingTargetItemIndex > -1) updatedInventory[existingTargetItemIndex].quantity += transferQty;
-                else updatedInventory.push({ ...sourceItem, id: Date.now().toString(), lab: targetLab, quantity: transferQty });
+                else updatedInventory.push({ ...sourceItem, id: Date.now().toString(), lab: targetLab, quantity: transferQty, school: activeSchoolFilter });
 
                 setInventory(updatedInventory);
-                setTransactions(prev => [...prev, { id: Date.now(), type: 'transfer_out', item: sourceItem.name, quantity: transferQty, date: new Date().toISOString(), user: user.name, lab: activeRole, targetLab: targetLab, year: appSettings.currentYear }]);
+                setTransactions(prev => [...prev, { id: Date.now(), type: 'transfer_out', item: sourceItem.name, quantity: transferQty, date: new Date().toISOString(), user: user.name, lab: activeRole, targetLab: targetLab, year: appSettings.currentYear, school: activeSchoolFilter }]);
 
                 const minuteId = 'TRN-' + Math.floor(1000 + Math.random() * 9000);
-                setMinutes([{ id: minuteId, type: 'محضر نقل عهدة', item: sourceItem.name, code: sourceItem.code, quantity: transferQty, unit: sourceItem.unit, date: new Date().toISOString(), lab: activeRole, user: user.name, reason: `تم النقل إلى: ${labsInfo[targetLab]?.name}`, year: appSettings.currentYear }, ...minutes]);
+                setMinutes([{ id: minuteId, type: 'محضر نقل عهدة', item: sourceItem.name, code: sourceItem.code, quantity: transferQty, unit: sourceItem.unit, date: new Date().toISOString(), lab: activeRole, user: user.name, reason: `تم النقل إلى: ${labsInfo[targetLab]?.name}`, year: appSettings.currentYear, school: activeSchoolFilter }, ...minutes]);
 
                 setMsg({ type: 'success', text: `تم النقل إلى ${labsInfo[targetLab].name} وإنشاء محضر النقل آلياً.` });
                 setSelectedItemId(''); setTargetLab(''); setQty('');
@@ -1060,7 +1095,7 @@
 
             return (
                 <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in">
-                    <ViewHeader title="نقل العهدة بين المعامل" desc="تحويل الأجهزة والأدوات بين المعامل وإصدار محاضر النقل آلياً" />
+                    <ViewHeader title="نقل العهدة بين المعامل (داخل المدرسة)" desc="تحويل الأجهزة والأدوات بين المعامل وإصدار محاضر النقل آلياً" />
                     {msg.text && <div className={`p-4 rounded-xl flex items-center gap-3 font-bold border animate-in fade-in ${msg.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>{msg.type === 'error' ? <XCircle/> : <CheckCircle2/>} {msg.text}</div>}
                     
                     <form onSubmit={handleTransfer} className="bg-white border border-slate-200 rounded-3xl p-8 space-y-8 shadow-sm">
@@ -1084,11 +1119,7 @@
                                 <label className="block text-sm font-bold text-slate-700 mb-2">المعمل الوجهة المستلم</label>
                                 <select required value={targetLab} onChange={e => setTargetLab(e.target.value)} className="w-full p-4 border border-slate-300 rounded-xl outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-purple-400 font-bold text-slate-800">
                                     <option value="">-- اختر الوجهة --</option>
-                                    <option value="science_primary">{labsInfo['science_primary'].name}</option>
-                                    <option value="science_upper">{labsInfo['science_upper'].name}</option>
-                                    <option value="biology">{labsInfo['biology'].name}</option>
-                                    <option value="chemistry">{labsInfo['chemistry'].name}</option>
-                                    <option value="physics">{labsInfo['physics'].name}</option>
+                                    {Object.keys(labsInfo).filter(k => k !== 'admin' && k !== activeRole && k !== 'all').map(key => <option key={key} value={key}>{labsInfo[key].name}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -1102,7 +1133,7 @@
         }
 
         // --- التحضير الإلكتروني المطور ---
-        function EPreparationView({ preparations, setPreparations, inventory, user, activeRole, appSettings, activeYearFilter }) {
+        function EPreparationView({ preparations, setPreparations, inventory, user, activeRole, appSettings, activeYearFilter, activeSchoolFilter }) {
             const [viewMode, setViewMode] = useState('new'); 
             const [selectedPrepId, setSelectedPrepId] = useState('');
             
@@ -1110,7 +1141,8 @@
             const [selectedMatId, setSelectedMatId] = useState('');
             const [selectedMatQty, setSelectedMatQty] = useState('');
 
-            const filteredPreps = preparations.filter(p => p.lab === activeRole && p.year === activeYearFilter);
+            const filteredPreps = preparations.filter(p => (!p.school || p.school === activeSchoolFilter) && p.lab === activeRole && p.year === activeYearFilter);
+            const activeInventory = inventory.filter(i => (!i.school || i.school === activeSchoolFilter) && i.lab === activeRole);
 
             const handleAddMaterial = () => {
                 if(!selectedMatId || !selectedMatQty) return;
@@ -1124,7 +1156,7 @@
                 const newPrep = {
                     id: 'PREP-' + Date.now().toString().slice(-6),
                     createdDate: new Date().toLocaleDateString('ar-SA'),
-                    teacherName: user.name, lab: activeRole, year: appSettings.currentYear, ...prepData
+                    teacherName: user.name, lab: activeRole, year: appSettings.currentYear, school: activeSchoolFilter, ...prepData
                 };
                 setPreparations([newPrep, ...preparations]);
                 alert("تم حفظ الإذن الإلكتروني بنجاح في السجل.");
@@ -1175,7 +1207,7 @@
                                 <div>توقيع المعلم<br><br>......................</div>
                                 <div>اعتماد المشرف<br><br>......................</div>
                             </div>
-                            <p style="text-align:center; font-size:12px; margin-top:30px; color:#555;">رقم المرجع: ${prepObj.id} | أُنشئ في: ${prepObj.createdDate}</p>
+                            <p style="text-align:center; font-size:12px; margin-top:30px; color:#555;">رقم المرجع: ${prepObj.id} | المدرسة: ${prepObj.school || 'عام'} | أُنشئ في: ${prepObj.createdDate}</p>
                         </div>
                     `;
                 }
@@ -1217,7 +1249,7 @@
                             <div className="border-t border-slate-200 pt-6">
                                 <h4 className="font-bold text-blue-800 mb-4 flex items-center gap-2"><Database className="w-5 h-5"/> اختيار المواد من جرد العهدة</h4>
                                 <div className="flex flex-col md:flex-row gap-3 items-end bg-blue-50 p-4 rounded-2xl border border-blue-100">
-                                    <div className="flex-1 w-full"><label className="block text-xs font-bold mb-1 text-blue-900">المادة</label><select value={selectedMatId} onChange={e=>setSelectedMatId(e.target.value)} className="w-full p-3 border border-blue-200 rounded-xl bg-white font-bold outline-none focus:ring-2 focus:ring-blue-400"><option value="">-- قائمة أدوات المعمل الفعالة --</option>{inventory.filter(i=>i.lab===activeRole).map(i => <option key={i.id} value={i.id}>{i.name} (المتاح: {i.quantity} {i.unit})</option>)}</select></div>
+                                    <div className="flex-1 w-full"><label className="block text-xs font-bold mb-1 text-blue-900">المادة</label><select value={selectedMatId} onChange={e=>setSelectedMatId(e.target.value)} className="w-full p-3 border border-blue-200 rounded-xl bg-white font-bold outline-none focus:ring-2 focus:ring-blue-400"><option value="">-- قائمة أدوات المعمل الفعالة --</option>{activeInventory.map(i => <option key={i.id} value={i.id}>{i.name} (المتاح: {i.quantity} {i.unit})</option>)}</select></div>
                                     <div className="w-full md:w-32"><label className="block text-xs font-bold mb-1 text-blue-900">الكمية</label><input type="number" min="0.1" step="0.1" value={selectedMatQty} onChange={e=>setSelectedMatQty(e.target.value)} className="w-full p-3 border border-blue-200 rounded-xl text-center font-bold outline-none focus:ring-2 focus:ring-blue-400 bg-white" placeholder="0.0" /></div>
                                     <button type="button" onClick={handleAddMaterial} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow transition-colors w-full md:w-auto h-[46px] flex items-center justify-center">إضافة للقائمة</button>
                                 </div>
@@ -1309,23 +1341,31 @@
         }
 
         // --- الجدول المدرسي ---
-        function ScheduleView({ activeRole, schedules, setSchedules, users, appSettings, user }) {
+        function ScheduleView({ activeRole, schedules, setSchedules, users, appSettings, user, activeSchoolFilter }) {
             const [isEditing, setIsEditing] = useState(false);
-            const mySchedule = schedules[activeRole] || schedules['science_primary'];
-            const labTeachers = users.filter(u => (u.role === activeRole || u.role === 'all') && ['teacher', 'coordinator', 'supervisor'].includes(u.type));
+            
+            // تخصيص الجدول للمدرسة المحددة والمعمل المحدد
+            const scheduleKey = `${activeSchoolFilter}_${activeRole}`;
+            const defaultEmpty = days.reduce((dAcc, day) => { dAcc[day] = periods.reduce((pAcc, p) => ({...pAcc, [p]: {class: '', teacher: ''}}), {}); return dAcc; }, {});
+            // توافقية للإصدار القديم أو الجديد
+            const mySchedule = schedules[scheduleKey] || schedules[activeRole] || defaultEmpty;
+            
+            const labTeachers = users.filter(u => (u.role === activeRole || u.role === 'all') && ['teacher', 'coordinator', 'supervisor'].includes(u.type) && (u.schools?.includes('الجميع') || u.schools?.includes(activeSchoolFilter) || !u.schools?.length));
             const allClasses = appSettings.grades.flatMap(g => appSettings.classes.map(c => `${g} / ${c}`));
             const canEdit = user.type === 'admin' || user.type === 'supervisor' || user.type === 'coordinator';
 
             const handleCellChange = (day, period, field, value) => {
                 const updated = {...schedules};
-                if (!updated[activeRole]) return;
-                updated[activeRole][day][period][field] = value;
+                if (!updated[scheduleKey]) {
+                    updated[scheduleKey] = JSON.parse(JSON.stringify(defaultEmpty)); 
+                }
+                updated[scheduleKey][day][period][field] = value;
                 setSchedules(updated);
             };
 
             return (
                 <div className="space-y-6 animate-in fade-in">
-                    <ViewHeader title={`الجدول المدرسي - ${labsInfo[activeRole]?.name}`} desc="تسكين ومتابعة حصص المعمل الأسبوعية (8 حصص)" />
+                    <ViewHeader title={`الجدول المدرسي - ${labsInfo[activeRole]?.name}`} desc={`تسكين ومتابعة حصص المعمل لمدرسة (${activeSchoolFilter})`} />
                     
                     {canEdit && (
                         <div className="flex gap-2 mb-4 print:hidden bg-slate-50 p-2 rounded-xl w-fit border border-slate-200">
@@ -1378,8 +1418,8 @@
         }
 
         // --- أرشيف المحاضر ---
-        function MinutesView({ minutes, activeRole, activeYearFilter }) {
-            const visibleMinutes = (activeRole === 'admin' || activeRole === 'minutes_global' ? minutes : minutes.filter(m => m.lab === activeRole)).filter(m => m.year === activeYearFilter);
+        function MinutesView({ minutes, activeRole, activeYearFilter, activeSchoolFilter }) {
+            const visibleMinutes = (activeRole === 'admin' || activeRole === 'minutes_global' ? minutes : minutes.filter(m => m.lab === activeRole)).filter(m => m.year === activeYearFilter && (!m.school || m.school === activeSchoolFilter));
             
             const handlePrintMinute = (minute) => {
                 let committeeHtml = '';
@@ -1391,8 +1431,8 @@
                     <div dir="rtl" style="font-family: Arial; padding: 40px; border: 2px solid #000; max-width: 800px; margin: auto;">
                         <h1 style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px;">${minute.type}</h1>
                         <div style="margin-top: 30px; font-size: 16px; line-height: 2;">
-                            <p><strong>رقم المحضر:</strong> ${minute.id} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>العام الدراسي:</strong> ${minute.year}</p>
-                            <p><strong>التاريخ:</strong> ${new Date(minute.date).toLocaleDateString('ar-SA')}</p>
+                            <p><strong>رقم المحضر:</strong> ${minute.id} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>المدرسة:</strong> ${minute.school || 'عام'}</p>
+                            <p><strong>التاريخ:</strong> ${new Date(minute.date).toLocaleDateString('ar-SA')} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>العام:</strong> ${minute.year}</p>
                             <p><strong>المعمل:</strong> ${labsInfo[minute.lab]?.name || minute.lab}</p>
                             <p><strong>المنشئ/المسؤول:</strong> ${minute.user}</p>
                             <hr style="margin: 20px 0;">
@@ -1433,7 +1473,7 @@
                                         <td className="p-5 text-center"><button onClick={() => handlePrintMinute(m)} className="bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 mx-auto hover:bg-slate-700 shadow-sm transition-all active:scale-95"><Printer className="w-4 h-4"/> طباعة المحضر</button></td>
                                     </tr>
                                 ))}
-                                {visibleMinutes.length === 0 && <tr><td colSpan="5" className="p-12 text-center text-slate-400 font-bold text-lg">لا توجد محاضر للعام المختار في هذا السجل</td></tr>}
+                                {visibleMinutes.length === 0 && <tr><td colSpan="5" className="p-12 text-center text-slate-400 font-bold text-lg">لا توجد محاضر لهذه المدرسة للعام المختار في هذا السجل</td></tr>}
                             </tbody>
                         </table>
                     </div>
@@ -1442,11 +1482,14 @@
         }
 
         // --- التقارير والطباعة ---
-        function ReportsView({ inventory, transactions, activeRole, activeYearFilter }) {
+        function ReportsView({ inventory, transactions, activeRole, activeYearFilter, activeSchoolFilter }) {
             const [reportType, setReportType] = useState('inventory');
             
+            const schoolTransactions = transactions.filter(t => (!t.school || t.school === activeSchoolFilter) && t.lab === activeRole);
+            const schoolInventory = inventory.filter(i => (!i.school || i.school === activeSchoolFilter) && i.lab === activeRole);
+
             const getLifetimeConsumed = (itemName) => {
-                return transactions.filter(t => ['consumption', 'disposal', 'breakage', 'loss', 'transfer_out'].includes(t.type) && t.item === itemName && t.lab === activeRole).reduce((sum, t) => sum + t.quantity, 0);
+                return schoolTransactions.filter(t => ['consumption', 'disposal', 'breakage', 'loss', 'transfer_out'].includes(t.type) && t.item === itemName).reduce((sum, t) => sum + t.quantity, 0);
             };
 
             return (
@@ -1462,7 +1505,7 @@
                     <div className="bg-white rounded-3xl print:m-0 p-8 border border-slate-200 print:border-none print:p-0 shadow-sm">
                         <div className="text-center mb-8 hidden print:block border-b-2 border-slate-800 pb-6">
                             <h1 className="text-3xl font-black text-slate-900">{reportType === 'inventory' ? 'تقرير عهدة ومخزون المعمل' : reportType === 'consumption' ? 'سجل حركات الاستهلاك' : 'دليل الأكواد والباركود'}</h1>
-                            <p className="font-bold text-slate-700 mt-2 text-lg">المعمل: {labsInfo[activeRole]?.name} &nbsp;|&nbsp; العام الدراسي: {activeYearFilter}</p>
+                            <p className="font-bold text-slate-700 mt-2 text-lg">المدرسة: {activeSchoolFilter} &nbsp;|&nbsp; المعمل: {labsInfo[activeRole]?.name} &nbsp;|&nbsp; العام الدراسي: {activeYearFilter}</p>
                         </div>
 
                         {reportType === 'inventory' && (
@@ -1474,7 +1517,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {inventory.map((item, idx) => {
+                                    {schoolInventory.map((item, idx) => {
                                         const consumed = getLifetimeConsumed(item.name);
                                         const supplied = item.quantity + consumed;
                                         return (
@@ -1500,7 +1543,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {transactions.filter(t => t.type !== 'supply' && t.lab === activeRole && t.year === activeYearFilter).map(tx => (
+                                    {schoolTransactions.filter(t => t.type !== 'supply' && t.year === activeYearFilter).map(tx => (
                                         <tr key={tx.id} className="border-b border-slate-300 hover:bg-slate-50 transition-colors">
                                             <td className="border-x border-slate-300 p-3 font-mono text-center text-slate-600" dir="ltr">{new Date(tx.date).toLocaleDateString('ar-SA')}</td>
                                             <td className="border-x border-slate-300 p-3 font-bold text-orange-700">{tx.type === 'consumption' ? 'استهلاك' : tx.type === 'transfer_out' ? 'نقل عهدة' : tx.type === 'breakage' ? 'كسر/تالف' : tx.type === 'loss' ? 'فقدان' : 'إعدام'}</td>
@@ -1509,7 +1552,7 @@
                                             <td className="border-x border-slate-300 p-3 text-xs font-bold text-slate-600 leading-relaxed">{tx.details || tx.user}</td>
                                         </tr>
                                     ))}
-                                    {transactions.filter(t => t.type !== 'supply' && t.lab === activeRole && t.year === activeYearFilter).length === 0 && <tr><td colSpan="5" className="p-8 text-center text-slate-400 font-bold">لا توجد حركات استهلاك مسجلة لهذا العام.</td></tr>}
+                                    {schoolTransactions.filter(t => t.type !== 'supply' && t.year === activeYearFilter).length === 0 && <tr><td colSpan="5" className="p-8 text-center text-slate-400 font-bold">لا توجد حركات استهلاك مسجلة لهذا العام.</td></tr>}
                                 </tbody>
                             </table>
                         )}
@@ -1520,7 +1563,7 @@
                                     للطباعة كملصقات (ستيكرات قابلة للقص): تأكد من ضبط إعدادات الطابعة على (A4) وإزالة الهوامش (Margins: None).
                                 </div>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 print:gap-[2mm] print:grid-cols-3 w-full">
-                                    {inventory.map(item => (
+                                    {schoolInventory.map(item => (
                                         <div key={`sticker-${item.id}`} className="border-2 border-slate-800 p-3 rounded-2xl text-center break-inside-avoid flex flex-col items-center justify-center bg-white shadow-sm" style={{ height: '3.8cm' }}>
                                             <h4 className="font-bold text-slate-900 text-xs leading-tight mb-1 truncate w-full">{item.name}</h4><p className="text-[10px] font-bold text-slate-500 mb-1">{labsInfo[item.lab]?.name}</p>
                                             <svg width="110" height="35" xmlns="http://www.w3.org/2000/svg" className="my-1"><rect width="110" height="35" fill="white"/><path d="M10 0h2v35h-2zm4 0h4v35h-4zm6 0h2v35h-2zm4 0h1v35h-1zm3 0h5v35h-5zm7 0h2v35h-2zm4 0h3v35h-3zm5 0h2v35h-2zm4 0h1v35h-1zm3 0h4v35h-4zm6 0h2v35h-2zm5 0h3v35h-3zm5 0h1v35h-1zm3 0h4v35h-4zm6 0h2v35h-2zm4 0h1v35h-1zm3 0h5v35h-5z" fill="black"/></svg>
