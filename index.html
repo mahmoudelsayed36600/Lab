@@ -24,7 +24,7 @@
         
         body {
             font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
-            background-color: #f8fafc;
+            background-color: #ffffff; /* تم التأكيد على الخلفية البيضاء بناءً على تفضيلاتك */
         }
         
         .custom-scrollbar::-webkit-scrollbar {
@@ -63,11 +63,11 @@
 
     <!-- Firebase SDK Modules -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
         
-        // إعدادات Firebase الخاصة بتطبيقك
+        // إعدادات Firebase الخاصة بتطبيقك (تم الدمج كما طلبت)
         const firebaseConfig = {
             apiKey: "AIzaSyAPcPQoAle1eawBZ_rZSjBheG31E5A1nts",
             authDomain: "bls-lab-97d96.firebaseapp.com",
