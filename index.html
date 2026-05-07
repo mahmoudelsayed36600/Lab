@@ -61,13 +61,13 @@
 <body>
     <div id="root"></div>
 
-    <!-- Firebase SDK Modules -->
+    <!-- Firebase SDK Modules - تم تصحيح الإصدار إلى 11.6.1 ليعمل بنجاح -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
-        // إعدادات Firebase الخاصة بتطبيقك (تم الدمج كما طلبت)
+        // إعدادات Firebase الخاصة بتطبيقك
         const firebaseConfig = {
             apiKey: "AIzaSyAPcPQoAle1eawBZ_rZSjBheG31E5A1nts",
             authDomain: "bls-lab-97d96.firebaseapp.com",
@@ -164,7 +164,7 @@
 
         const labsInfo = {
             admin: { name: 'إدارة النظام', icon: ShieldCheck, color: 'text-slate-800', bg: 'bg-slate-100' },
-            all: { name: 'جميع المعامل', icon: Database, color: 'text-indigo-600', bg: 'bg-indigo-50' }, // تمت إضافة خيار جميع المعامل
+            all: { name: 'جميع المعامل', icon: Database, color: 'text-indigo-600', bg: 'bg-indigo-50' }, 
             science_primary: { name: 'معمل العلوم الأولية', icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
             science_upper: { name: 'معمل علوم العليا', icon: Layers, color: 'text-teal-600', bg: 'bg-teal-50' },
             biology: { name: 'معمل الأحياء', icon: Microscope, color: 'text-green-600', bg: 'bg-green-50' },
@@ -361,7 +361,9 @@
 
             const handleLogin = (e) => {
                 e.preventDefault();
-                const user = usersList.find(u => u.username === username && u.password === password);
+                // تم إضافة trim للتأكد من عدم وجود مسافات فارغة تمنع الدخول
+                const cleanUser = username.trim(); 
+                const user = usersList.find(u => u.username === cleanUser && u.password === password);
                 if (user) onLogin(user);
                 else setError('بيانات الدخول غير صحيحة، تأكد من اسم المستخدم وكلمة المرور');
             };
@@ -649,12 +651,15 @@
 
             const handleSubmit = (e) => {
                 e.preventDefault();
+                // تم التأكد من إزالة المسافات الزائدة من اسم المستخدم أثناء الإنشاء
+                const cleanUsername = formData.username.trim(); 
+                
                 if (isEditing) {
-                    setUsers(users.map(u => u.id === formData.id ? { ...formData } : u));
+                    setUsers(users.map(u => u.id === formData.id ? { ...formData, username: cleanUsername } : u));
                     setIsEditing(false);
                 } else {
-                    if (users.find(u => u.username === formData.username)) return alert("اسم المستخدم موجود مسبقاً!");
-                    setUsers([...users, { id: 'u' + Date.now(), ...formData }]);
+                    if (users.find(u => u.username === cleanUsername)) return alert("اسم المستخدم موجود مسبقاً!");
+                    setUsers([...users, { id: 'u' + Date.now(), ...formData, username: cleanUsername }]);
                 }
                 setFormData({ id: null, username: '', password: '', role: 'science_primary', type: 'teacher', name: '', stages: [], grades: [], classes: [] });
             };
