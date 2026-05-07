@@ -501,6 +501,7 @@
             const menuItems = [
                 { id: 'inventory', name: 'جرد المعمل', icon: Database, show: !['users', 'settings'].includes(adminActiveLab) },
                 { id: 'supply', name: 'التوريد', icon: PackagePlus, show: !isTeacher && !['users', 'settings', 'minutes_global'].includes(adminActiveLab) },
+                { id: 'edit_supply', name: 'تعديل التوريد', icon: Edit, show: !isTeacher && !['users', 'settings', 'minutes_global'].includes(adminActiveLab) },
                 { id: 'consumption', name: 'الاستهلاك', icon: Activity, show: !isTeacher && !['users', 'settings', 'minutes_global'].includes(adminActiveLab) },
                 { id: 'expiry', name: 'الصلاحية والإعدام', icon: AlertTriangle, show: !isTeacher && !['users', 'settings', 'minutes_global'].includes(adminActiveLab) },
                 { id: 'transfer', name: 'نقل العهدة', icon: ArrowRightLeft, show: !isTeacher && !['users', 'settings', 'minutes_global'].includes(adminActiveLab) },
@@ -578,6 +579,7 @@
                                 
                                 {activeTab === 'inventory' && <InventoryView inventory={inventory} user={user} setInventory={setInventory} setMinutes={setMinutes} minutes={minutes} activeRole={effectiveRole} appSettings={appSettings} setTransactions={setTransactions} transactions={transactions} users={users} activeSchoolFilter={activeSchoolFilter} />}
                                 {activeTab === 'supply' && <SupplyView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={effectiveRole} user={user} appSettings={appSettings} activeSchoolFilter={activeSchoolFilter} />}
+                                {activeTab === 'edit_supply' && <EditSupplyView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={effectiveRole} user={user} appSettings={appSettings} activeSchoolFilter={activeSchoolFilter} />}
                                 {activeTab === 'consumption' && <ConsumptionView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={effectiveRole} user={user} appSettings={appSettings} users={users} activeSchoolFilter={activeSchoolFilter} />}
                                 {activeTab === 'expiry' && <ExpiryView inventory={inventory} setInventory={setInventory} minutes={minutes} setMinutes={setMinutes} transactions={transactions} setTransactions={setTransactions} user={user} activeRole={effectiveRole} appSettings={appSettings} activeSchoolFilter={activeSchoolFilter} />}
                                 {activeTab === 'transfer' && <TransferView inventory={inventory} setInventory={setInventory} transactions={transactions} setTransactions={setTransactions} activeRole={effectiveRole} user={user} appSettings={appSettings} minutes={minutes} setMinutes={setMinutes} activeSchoolFilter={activeSchoolFilter} />}
@@ -878,10 +880,45 @@
         function SupplyView({ inventory, setInventory, setTransactions, activeRole, user, appSettings, activeSchoolFilter }) {
             const [formData, setFormData] = useState({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', lab: activeRole });
             const [msg, setMsg] = useState('');
-            const [isEditing, setIsEditing] = useState(false);
-            const [editId, setEditId] = useState(null);
 
             const generateCode = (lab) => `${lab.substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const newCode = generateCode(formData.lab);
+                const newBarcode = Math.floor(1000000 + Math.random() * 9000000).toString();
+                const newItem = { id: Date.now().toString(), code: newCode, barcode: newBarcode, ...formData, quantity: parseFloat(formData.quantity), school: activeSchoolFilter };
+                setInventory([...inventory, newItem]);
+                setTransactions(prev => [...prev, { id: Date.now(), type: 'supply', item: newItem.name, quantity: newItem.quantity, date: new Date().toISOString(), user: user.name, lab: formData.lab, year: appSettings.currentYear, school: activeSchoolFilter }]);
+                setMsg(`تم التوريد بنجاح لـ ${activeSchoolFilter}. الكود: ${newCode}`);
+                setFormData({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', lab: activeRole });
+                setTimeout(() => setMsg(''), 4000);
+            };
+
+            return (
+                <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in">
+                    <ViewHeader title="إضافة أصناف جديدة (توريد)" desc="إدخال المواد للأرصدة وتوليد الباركود تلقائياً" />
+                    {msg && <div className="bg-green-50 text-green-700 p-4 rounded-xl flex gap-2 font-bold border border-green-200 animate-in fade-in"><CheckCircle2/>{msg}</div>}
+                    <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6">
+                        <div className="grid grid-cols-2 gap-5">
+                            <div className="col-span-2"><label className="block text-sm font-bold text-slate-700 mb-2">اسم الصنف</label><input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>
+                            <div><label className="block text-sm font-bold text-slate-700 mb-2">النوع</label><select value={formData.type} onChange={e=>setFormData({...formData, type: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800"><option value="consumable">مادة مستهلكة</option><option value="permanent">مادة مستديمة (عهدة)</option></select></div>
+                            <div><label className="block text-sm font-bold text-slate-700 mb-2">الكمية</label><input required type="number" min="0.1" step="0.1" value={formData.quantity} onChange={e=>setFormData({...formData, quantity: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>
+                            <div><label className="block text-sm font-bold text-slate-700 mb-2">الوحدة القياسية</label><input required type="text" value={formData.unit} onChange={e=>setFormData({...formData, unit: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" placeholder="لتر، جهاز، حبة..."/></div>
+                            {formData.type === 'consumable' && <div><label className="block text-sm font-bold text-slate-700 mb-2">تاريخ الصلاحية</label><input required type="date" value={formData.expiryDate} onChange={e=>setFormData({...formData, expiryDate: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>}
+                        </div>
+                        <button type="submit" className="w-full bg-blue-600 text-white font-bold py-4 mt-4 rounded-xl shadow-lg hover:shadow-blue-500/30 hover:bg-blue-700 transition-all text-lg flex items-center justify-center gap-2"><PackagePlus className="w-6 h-6"/> تسجيل الصنف في عهدة المدرسة</button>
+                    </form>
+                </div>
+            );
+        }
+
+        // --- تعديل التوريد ---
+        function EditSupplyView({ inventory, setInventory, setTransactions, activeRole, user, appSettings, activeSchoolFilter }) {
+            const [formData, setFormData] = useState({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', lab: activeRole });
+            const [msg, setMsg] = useState('');
+            const [isEditing, setIsEditing] = useState(false);
+            const [editId, setEditId] = useState(null);
 
             const handleSubmit = (e) => {
                 e.preventDefault();
@@ -893,23 +930,15 @@
                     
                     setTransactions(prev => [...prev, { id: Date.now(), type: 'edit_supply', item: formData.name, quantity: parseFloat(formData.quantity), date: new Date().toISOString(), user: user.name, lab: activeRole, year: appSettings.currentYear, school: activeSchoolFilter, details: 'تعديل بيانات توريد صنف' }]);
                     
-                    setMsg('تم تعديل بيانات الصنف بنجاح.');
+                    setMsg('تم تعديل بيانات الصنف وحفظها في العهدة بنجاح.');
                     setIsEditing(false);
                     setEditId(null);
-                } else {
-                    const newCode = generateCode(formData.lab);
-                    const newBarcode = Math.floor(1000000 + Math.random() * 9000000).toString();
-                    const newItem = { id: Date.now().toString(), code: newCode, barcode: newBarcode, ...formData, quantity: parseFloat(formData.quantity), school: activeSchoolFilter };
-                    setInventory([...inventory, newItem]);
-                    setTransactions(prev => [...prev, { id: Date.now(), type: 'supply', item: newItem.name, quantity: newItem.quantity, date: new Date().toISOString(), user: user.name, lab: formData.lab, year: appSettings.currentYear, school: activeSchoolFilter }]);
-                    setMsg(`تم التوريد بنجاح لـ ${activeSchoolFilter}. الكود: ${newCode}`);
+                    setFormData({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', lab: activeRole });
+                    setTimeout(() => setMsg(''), 4000);
                 }
-                setFormData({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', lab: activeRole });
-                setTimeout(() => setMsg(''), 4000);
             };
 
             const handleEdit = (item) => {
-                // حماية المتغيرات وتجنب القيم الفارغة (undefined) لمنع توقف React
                 setFormData({
                     name: item.name || '',
                     type: item.type || 'consumable',
@@ -920,6 +949,7 @@
                 });
                 setIsEditing(true);
                 setEditId(item.id);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             };
 
             const cancelEdit = () => {
@@ -932,32 +962,33 @@
 
             return (
                 <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in">
-                    <ViewHeader title={isEditing ? "تعديل بيانات صنف" : "إضافة أصناف جديدة (توريد)"} desc="إدخال المواد للأرصدة وتعديلها" />
+                    <ViewHeader title="تعديل التوريدات" desc="تحديث وتعديل بيانات الأصناف والمواد المدخلة مسبقاً للعهدة" />
+                    
                     {msg && <div className="bg-green-50 text-green-700 p-4 rounded-xl flex gap-2 font-bold border border-green-200 animate-in fade-in"><CheckCircle2/>{msg}</div>}
-                    <form onSubmit={handleSubmit} className={`bg-white border rounded-3xl p-8 shadow-sm space-y-6 ${isEditing ? 'border-orange-300 shadow-orange-100' : 'border-slate-200'}`}>
-                        <div className="grid grid-cols-2 gap-5">
-                            <div className="col-span-2"><label className="block text-sm font-bold text-slate-700 mb-2">اسم الصنف</label><input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>
-                            <div><label className="block text-sm font-bold text-slate-700 mb-2">النوع</label><select value={formData.type} onChange={e=>setFormData({...formData, type: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800"><option value="consumable">مادة مستهلكة</option><option value="permanent">مادة مستديمة (عهدة)</option></select></div>
-                            <div><label className="block text-sm font-bold text-slate-700 mb-2">الكمية</label><input required type="number" min="0.1" step="0.1" value={formData.quantity} onChange={e=>setFormData({...formData, quantity: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>
-                            <div><label className="block text-sm font-bold text-slate-700 mb-2">الوحدة القياسية</label><input required type="text" value={formData.unit} onChange={e=>setFormData({...formData, unit: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" placeholder="لتر، جهاز، حبة..."/></div>
-                            {formData.type === 'consumable' && <div><label className="block text-sm font-bold text-slate-700 mb-2">تاريخ الصلاحية</label><input required type="date" value={formData.expiryDate} onChange={e=>setFormData({...formData, expiryDate: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>}
-                        </div>
-                        <div className="flex gap-4 mt-4">
-                            <button type="submit" className={`flex-1 text-white font-bold py-4 rounded-xl shadow-lg transition-all text-lg flex items-center justify-center gap-2 ${isEditing ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/30' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/30'}`}>
-                                {/* تم إزالة التبديل المعقد بالـ Fragments لمنع انهيار الصفحة (White Screen) */}
-                                {isEditing ? <Save className="w-6 h-6"/> : <PackagePlus className="w-6 h-6"/>}
-                                <span>{isEditing ? 'حفظ التعديلات' : 'تسجيل الصنف في عهدة المدرسة'}</span>
-                            </button>
-                            {isEditing && (
-                                <button type="button" onClick={cancelEdit} className="px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all">إلغاء</button>
-                            )}
-                        </div>
-                    </form>
+                    
+                    {isEditing && (
+                        <form onSubmit={handleSubmit} className="bg-white border border-orange-300 rounded-3xl p-8 shadow-orange-100 shadow-sm space-y-6 animate-in slide-in-from-top-4">
+                            <h3 className="font-bold text-orange-600 mb-4 flex items-center gap-2"><Edit className="w-5 h-5"/> تعديل بيانات الصنف المختار</h3>
+                            <div className="grid grid-cols-2 gap-5">
+                                <div className="col-span-2"><label className="block text-sm font-bold text-slate-700 mb-2">اسم الصنف</label><input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>
+                                <div><label className="block text-sm font-bold text-slate-700 mb-2">النوع</label><select value={formData.type} onChange={e=>setFormData({...formData, type: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800"><option value="consumable">مادة مستهلكة</option><option value="permanent">مادة مستديمة (عهدة)</option></select></div>
+                                <div><label className="block text-sm font-bold text-slate-700 mb-2">الكمية</label><input required type="number" min="0.1" step="0.1" value={formData.quantity} onChange={e=>setFormData({...formData, quantity: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>
+                                <div><label className="block text-sm font-bold text-slate-700 mb-2">الوحدة القياسية</label><input required type="text" value={formData.unit} onChange={e=>setFormData({...formData, unit: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" placeholder="لتر، جهاز، حبة..."/></div>
+                                {formData.type === 'consumable' && <div><label className="block text-sm font-bold text-slate-700 mb-2">تاريخ الصلاحية</label><input required type="date" value={formData.expiryDate} onChange={e=>setFormData({...formData, expiryDate: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>}
+                            </div>
+                            <div className="flex gap-4 mt-4">
+                                <button type="submit" className="flex-1 text-white font-bold py-4 rounded-xl shadow-lg transition-all text-lg flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 shadow-orange-500/30">
+                                    <Save className="w-6 h-6"/>
+                                    <span>حفظ التعديلات للعهدة</span>
+                                </button>
+                                <button type="button" onClick={cancelEdit} className="px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all">إلغاء الأمر</button>
+                            </div>
+                        </form>
+                    )}
 
-                    {/* قائمة الأصناف الموردة للتعديل */}
-                    <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm mt-8">
+                    <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm mt-4">
                         <div className="p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-                            <h3 className="font-bold text-slate-800 flex items-center gap-2"><Database className="w-5 h-5 text-blue-500"/> سجل الأصناف الموردة مسبقاً</h3>
+                            <h3 className="font-bold text-slate-800 flex items-center gap-2"><Database className="w-5 h-5 text-blue-500"/> سجل الأصناف الموردة</h3>
                             <span className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold">يمكنك التعديل من هنا</span>
                         </div>
                         <table className="w-full text-right text-sm">
@@ -972,7 +1003,7 @@
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {currentInventory.map(item => (
-                                    <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                                    <tr key={item.id} className={`hover:bg-slate-50 transition-colors ${editId === item.id ? 'bg-orange-50' : ''}`}>
                                         <td className="p-4 font-mono text-xs text-slate-500" dir="ltr">{item.code}</td>
                                         <td className="p-4 font-bold text-slate-800">{item.name}</td>
                                         <td className="p-4 font-bold text-blue-600">{item.quantity} <span className="text-xs text-slate-500 font-normal">{item.unit}</span></td>
