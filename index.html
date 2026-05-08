@@ -878,7 +878,7 @@
 
         // --- التوريد ---
         function SupplyView({ inventory, setInventory, setTransactions, activeRole, user, appSettings, activeSchoolFilter }) {
-            const [formData, setFormData] = useState({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', lab: activeRole });
+            const [formData, setFormData] = useState({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', supplyDate: new Date().toISOString().split('T')[0], lab: activeRole });
             const [msg, setMsg] = useState('');
 
             const generateCode = (lab) => `${lab.substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
@@ -889,9 +889,9 @@
                 const newBarcode = Math.floor(1000000 + Math.random() * 9000000).toString();
                 const newItem = { id: Date.now().toString(), code: newCode, barcode: newBarcode, ...formData, quantity: parseFloat(formData.quantity), school: activeSchoolFilter };
                 setInventory([...inventory, newItem]);
-                setTransactions(prev => [...prev, { id: Date.now(), type: 'supply', item: newItem.name, quantity: newItem.quantity, date: new Date().toISOString(), user: user.name, lab: formData.lab, year: appSettings.currentYear, school: activeSchoolFilter }]);
+                setTransactions(prev => [...prev, { id: Date.now(), type: 'supply', item: newItem.name, quantity: newItem.quantity, date: formData.supplyDate, user: user.name, lab: formData.lab, year: appSettings.currentYear, school: activeSchoolFilter }]);
                 setMsg(`تم التوريد بنجاح لـ ${activeSchoolFilter}. الكود: ${newCode}`);
-                setFormData({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', lab: activeRole });
+                setFormData({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', supplyDate: new Date().toISOString().split('T')[0], lab: activeRole });
                 setTimeout(() => setMsg(''), 4000);
             };
 
@@ -905,6 +905,7 @@
                             <div><label className="block text-sm font-bold text-slate-700 mb-2">النوع</label><select value={formData.type} onChange={e=>setFormData({...formData, type: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800"><option value="consumable">مادة مستهلكة</option><option value="permanent">مادة مستديمة (عهدة)</option></select></div>
                             <div><label className="block text-sm font-bold text-slate-700 mb-2">الكمية</label><input required type="number" min="0.1" step="0.1" value={formData.quantity} onChange={e=>setFormData({...formData, quantity: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>
                             <div><label className="block text-sm font-bold text-slate-700 mb-2">الوحدة القياسية</label><input required type="text" value={formData.unit} onChange={e=>setFormData({...formData, unit: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" placeholder="لتر، جهاز، حبة..."/></div>
+                            <div><label className="block text-sm font-bold text-slate-700 mb-2">تاريخ التوريد</label><input required type="date" value={formData.supplyDate} onChange={e=>setFormData({...formData, supplyDate: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>
                             {formData.type === 'consumable' && <div><label className="block text-sm font-bold text-slate-700 mb-2">تاريخ الصلاحية</label><input required type="date" value={formData.expiryDate} onChange={e=>setFormData({...formData, expiryDate: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>}
                         </div>
                         <button type="submit" className="w-full bg-blue-600 text-white font-bold py-4 mt-4 rounded-xl shadow-lg hover:shadow-blue-500/30 hover:bg-blue-700 transition-all text-lg flex items-center justify-center gap-2"><PackagePlus className="w-6 h-6"/> تسجيل الصنف في عهدة المدرسة</button>
@@ -915,7 +916,7 @@
 
         // --- تعديل التوريد ---
         function EditSupplyView({ inventory, setInventory, setTransactions, activeRole, user, appSettings, activeSchoolFilter }) {
-            const [formData, setFormData] = useState({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', lab: activeRole });
+            const [formData, setFormData] = useState({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', supplyDate: '', lab: activeRole });
             const [msg, setMsg] = useState('');
             const [isEditing, setIsEditing] = useState(false);
             const [editId, setEditId] = useState(null);
@@ -928,12 +929,12 @@
                     );
                     setInventory(updatedInventory);
                     
-                    setTransactions(prev => [...prev, { id: Date.now(), type: 'edit_supply', item: formData.name, quantity: parseFloat(formData.quantity), date: new Date().toISOString(), user: user.name, lab: activeRole, year: appSettings.currentYear, school: activeSchoolFilter, details: 'تعديل بيانات توريد صنف' }]);
+                    setTransactions(prev => [...prev, { id: Date.now(), type: 'edit_supply', item: formData.name, quantity: parseFloat(formData.quantity), date: formData.supplyDate || new Date().toISOString(), user: user.name, lab: activeRole, year: appSettings.currentYear, school: activeSchoolFilter, details: 'تعديل بيانات توريد صنف' }]);
                     
                     setMsg('تم تعديل بيانات الصنف وحفظها في العهدة بنجاح.');
                     setIsEditing(false);
                     setEditId(null);
-                    setFormData({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', lab: activeRole });
+                    setFormData({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', supplyDate: '', lab: activeRole });
                     setTimeout(() => setMsg(''), 4000);
                 }
             };
@@ -945,6 +946,7 @@
                     quantity: item.quantity || '',
                     unit: item.unit || '',
                     expiryDate: item.expiryDate || '',
+                    supplyDate: item.supplyDate || new Date().toISOString().split('T')[0],
                     lab: item.lab || activeRole
                 });
                 setIsEditing(true);
@@ -955,7 +957,7 @@
             const cancelEdit = () => {
                 setIsEditing(false);
                 setEditId(null);
-                setFormData({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', lab: activeRole });
+                setFormData({ name: '', type: 'consumable', quantity: '', unit: '', expiryDate: '', supplyDate: '', lab: activeRole });
             };
 
             const currentInventory = inventory.filter(i => (!i.school || i.school === activeSchoolFilter) && i.lab === activeRole);
@@ -974,6 +976,7 @@
                                 <div><label className="block text-sm font-bold text-slate-700 mb-2">النوع</label><select value={formData.type} onChange={e=>setFormData({...formData, type: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800"><option value="consumable">مادة مستهلكة</option><option value="permanent">مادة مستديمة (عهدة)</option></select></div>
                                 <div><label className="block text-sm font-bold text-slate-700 mb-2">الكمية</label><input required type="number" min="0.1" step="0.1" value={formData.quantity} onChange={e=>setFormData({...formData, quantity: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>
                                 <div><label className="block text-sm font-bold text-slate-700 mb-2">الوحدة القياسية</label><input required type="text" value={formData.unit} onChange={e=>setFormData({...formData, unit: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" placeholder="لتر، جهاز، حبة..."/></div>
+                                <div><label className="block text-sm font-bold text-slate-700 mb-2">تاريخ التوريد</label><input required type="date" value={formData.supplyDate} onChange={e=>setFormData({...formData, supplyDate: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>
                                 {formData.type === 'consumable' && <div><label className="block text-sm font-bold text-slate-700 mb-2">تاريخ الصلاحية</label><input required type="date" value={formData.expiryDate} onChange={e=>setFormData({...formData, expiryDate: e.target.value})} className="w-full p-3.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-800" /></div>}
                             </div>
                             <div className="flex gap-4 mt-4">
@@ -996,7 +999,8 @@
                                 <tr>
                                     <th className="p-4 font-bold text-slate-600">الكود</th>
                                     <th className="p-4 font-bold text-slate-600">اسم الصنف</th>
-                                    <th className="p-4 font-bold text-slate-600">الكمية الإجمالية</th>
+                                    <th className="p-4 font-bold text-slate-600">تاريخ التوريد</th>
+                                    <th className="p-4 font-bold text-slate-600">الكمية</th>
                                     <th className="p-4 font-bold text-slate-600">النوع</th>
                                     <th className="p-4 text-center font-bold text-slate-600">تعديل</th>
                                 </tr>
@@ -1006,6 +1010,7 @@
                                     <tr key={item.id} className={`hover:bg-slate-50 transition-colors ${editId === item.id ? 'bg-orange-50' : ''}`}>
                                         <td className="p-4 font-mono text-xs text-slate-500" dir="ltr">{item.code}</td>
                                         <td className="p-4 font-bold text-slate-800">{item.name}</td>
+                                        <td className="p-4 font-bold text-slate-700">{item.supplyDate || '-'}</td>
                                         <td className="p-4 font-bold text-blue-600">{item.quantity} <span className="text-xs text-slate-500 font-normal">{item.unit}</span></td>
                                         <td className="p-4"><span className={`px-2 py-1 rounded text-xs font-bold ${item.type === 'permanent' ? 'bg-purple-50 text-purple-700' : 'bg-orange-50 text-orange-700'}`}>{item.type === 'permanent' ? 'مستديم' : 'مستهلك'}</span></td>
                                         <td className="p-4 text-center">
@@ -1013,7 +1018,7 @@
                                         </td>
                                     </tr>
                                 ))}
-                                {currentInventory.length === 0 && <tr><td colSpan="5" className="p-10 text-center text-slate-400 font-bold text-lg">لم يتم توريد أصناف في هذا المعمل لهذه المدرسة بعد.</td></tr>}
+                                {currentInventory.length === 0 && <tr><td colSpan="6" className="p-10 text-center text-slate-400 font-bold text-lg">لم يتم توريد أصناف في هذا المعمل لهذه المدرسة بعد.</td></tr>}
                             </tbody>
                         </table>
                     </div>
